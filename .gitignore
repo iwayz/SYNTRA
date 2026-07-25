@@ -1,0 +1,27 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.dbmdl
+*.publishsettings
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+
+## Node / frontend
+node_modules/
+dist/
+dist-ssr/
+*.local
+.env
+.env.*
+
+## Editor
+.idea/
+*.swp
+
+## OS
+Thumbs.db
+.DS_Store
