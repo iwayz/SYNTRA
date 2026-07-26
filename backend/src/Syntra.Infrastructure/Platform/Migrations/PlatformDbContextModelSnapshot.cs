@@ -179,6 +179,18 @@ namespace Syntra.Infrastructure.Platform.Migrations
                             Slug = "abc",
                             Status = "Active",
                             UpdatedAt = new DateTime(2026, 7, 26, 0, 0, 0, 0, DateTimeKind.Utc)
+                        },
+                        new
+                        {
+                            TenantId = 2,
+                            ConnectionString = "Data Source=.;Initial Catalog=Syntra_Xyz;Integrated Security=True;TrustServerCertificate=True",
+                            CreatedAt = new DateTime(2026, 7, 26, 0, 0, 0, 0, DateTimeKind.Utc),
+                            DatabaseName = "Syntra_Xyz",
+                            DatabaseServer = ".",
+                            Name = "Demo Tenant 2",
+                            Slug = "xyz",
+                            Status = "Active",
+                            UpdatedAt = new DateTime(2026, 7, 26, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 

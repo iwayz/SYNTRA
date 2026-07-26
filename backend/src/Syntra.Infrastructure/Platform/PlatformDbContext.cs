@@ -71,19 +71,33 @@ public class PlatformDbContext : DbContext
             e.HasIndex(u => u.Email).IsUnique();
         });
 
-        // Seed data: one demo tenant so the tenant-resolution middleware can be
-        // exercised locally via abc.localhost without a full provisioning pipeline yet.
-        modelBuilder.Entity<Tenant>().HasData(new Tenant
-        {
-            TenantId = 1,
-            Name = "Demo Tenant",
-            Slug = "abc",
-            DatabaseServer = ".",
-            DatabaseName = "Syntra_Abc",
-            ConnectionString = "Data Source=.;Initial Catalog=Syntra_Abc;Integrated Security=True;TrustServerCertificate=True",
-            Status = TenantStatus.Active,
-            CreatedAt = new DateTime(2026, 7, 26, 0, 0, 0, DateTimeKind.Utc),
-            UpdatedAt = new DateTime(2026, 7, 26, 0, 0, 0, DateTimeKind.Utc)
-        });
+        // Seed data: demo tenants so the tenant-resolution middleware and the
+        // migration orchestrator can be exercised locally without a full
+        // provisioning pipeline yet.
+        modelBuilder.Entity<Tenant>().HasData(
+            new Tenant
+            {
+                TenantId = 1,
+                Name = "Demo Tenant",
+                Slug = "abc",
+                DatabaseServer = ".",
+                DatabaseName = "Syntra_Abc",
+                ConnectionString = "Data Source=.;Initial Catalog=Syntra_Abc;Integrated Security=True;TrustServerCertificate=True",
+                Status = TenantStatus.Active,
+                CreatedAt = new DateTime(2026, 7, 26, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 7, 26, 0, 0, 0, DateTimeKind.Utc)
+            },
+            new Tenant
+            {
+                TenantId = 2,
+                Name = "Demo Tenant 2",
+                Slug = "xyz",
+                DatabaseServer = ".",
+                DatabaseName = "Syntra_Xyz",
+                ConnectionString = "Data Source=.;Initial Catalog=Syntra_Xyz;Integrated Security=True;TrustServerCertificate=True",
+                Status = TenantStatus.Active,
+                CreatedAt = new DateTime(2026, 7, 26, 0, 0, 0, DateTimeKind.Utc),
+                UpdatedAt = new DateTime(2026, 7, 26, 0, 0, 0, DateTimeKind.Utc)
+            });
     }
 }
