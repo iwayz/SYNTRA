@@ -42,6 +42,10 @@ foreach (var tenant in tenants)
 
         if (pending.Count == 0)
         {
+            var current = (await tenantDb.Database.GetAppliedMigrationsAsync()).LastOrDefault() ?? "none";
+
+            await UpsertSchemaVersionAsync(platformDb, tenant.TenantId, current, MigrationRunStatus.Success, null);
+
             Console.WriteLine("  Already up to date.");
             upToDate++;
             continue;
