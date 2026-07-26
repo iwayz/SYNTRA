@@ -26,7 +26,7 @@ public class TenantResolutionMiddleware
             return;
         }
 
-        if (tenant.Status is TenantStatus.Suspended or TenantStatus.Cancelled)
+        if (tenant.Status is TenantStatus.Suspended or TenantStatus.Cancelled or TenantStatus.Provisioning)
         {
             context.Response.StatusCode = StatusCodes.Status403Forbidden;
             await context.Response.WriteAsync("This account is not currently active.");

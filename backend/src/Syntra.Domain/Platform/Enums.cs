@@ -2,6 +2,7 @@ namespace Syntra.Domain.Platform;
 
 public enum TenantStatus
 {
+    Provisioning,
     Trial,
     Active,
     Suspended,
