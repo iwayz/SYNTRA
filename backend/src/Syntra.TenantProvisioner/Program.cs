@@ -1,13 +1,16 @@
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Syntra.Domain.Platform;
+using Syntra.Domain.TenantData;
 using Syntra.Infrastructure.Platform;
 using Syntra.Infrastructure.TenantData;
 
 var options = ParseArgs(args);
 if (options is null)
 {
-    Console.WriteLine("Usage: Syntra.TenantProvisioner --name \"Company Name\" --slug slug --admin-email admin@example.com");
+    Console.WriteLine(
+        "Usage: Syntra.TenantProvisioner --name \"Company Name\" --slug slug --admin-email admin@example.com --admin-password P@ssword1");
     return 1;
 }
 
@@ -60,40 +63,64 @@ try
         .UseSqlServer(tenant.ConnectionString)
         .Options;
 
-    using (var tenantDb = new TenantDbContext(tenantOptions))
-    {
-        await tenantDb.Database.MigrateAsync();
-    }
+    using var tenantDb = new TenantDbContext(tenantOptions);
+
+    await tenantDb.Database.MigrateAsync();
 
     await LogStepAsync(platformDb, tenant.TenantId, "DatabaseCreated", OnboardingStepStatus.Success, null);
     await LogStepAsync(platformDb, tenant.TenantId, "MigrationsApplied", OnboardingStepStatus.Success, null);
     Console.WriteLine("  Database created and migrated.");
+
+    // Step 3: seed reference data. No-op - Phase 1 hasn't defined master data yet.
+    await LogStepAsync(
+        platformDb,
+        tenant.TenantId,
+        "SeedDataLoaded",
+        OnboardingStepStatus.Success,
+        "No-op: no reference/master data defined yet (Phase 1 not started).");
+    Console.WriteLine("  Seed reference data: skipped (nothing defined yet).");
+
+    // Step 4: create the admin user. Direct insert rather than UserManager,
+    // since this console app has no Identity DI stack - PasswordHasher is the
+    // same underlying mechanism Identity itself uses, so the result is fully
+    // compatible with UserManager/SignInManager used later by Syntra.Api.
+    var adminUser = new TenantUser
+    {
+        UserName = options.AdminEmail,
+        NormalizedUserName = options.AdminEmail.ToUpperInvariant(),
+        Email = options.AdminEmail,
+        NormalizedEmail = options.AdminEmail.ToUpperInvariant(),
+        EmailConfirmed = true,
+        SecurityStamp = Guid.NewGuid().ToString()
+    };
+
+    adminUser.PasswordHash = new PasswordHasher<TenantUser>().HashPassword(adminUser, options.AdminPassword);
+
+    tenantDb.Users.Add(adminUser);
+    await tenantDb.SaveChangesAsync();
+
+    tenantDb.UserRoles.Add(new IdentityUserRole<int>
+    {
+        UserId = adminUser.Id,
+        RoleId = TenantRoles.AdminRoleId
+    });
+    await tenantDb.SaveChangesAsync();
+
+    await LogStepAsync(
+        platformDb,
+        tenant.TenantId,
+        "AdminUserCreated",
+        OnboardingStepStatus.Success,
+        $"Created admin user '{options.AdminEmail}' with role '{TenantRoles.AdminRoleName}'.");
+    Console.WriteLine($"  Admin user '{options.AdminEmail}' created with role '{TenantRoles.AdminRoleName}'.");
 }
 catch (Exception ex)
 {
     await LogStepAsync(platformDb, tenant.TenantId, "MigrationsApplied", OnboardingStepStatus.Failed, ex.Message);
-    Console.WriteLine($"FAILED at database/migration step: {ex.Message}");
+    Console.WriteLine($"FAILED: {ex.Message}");
     Console.WriteLine($"Tenant '{tenant.Name}' (TenantId {tenant.TenantId}) left in status '{tenant.Status}' for manual investigation.");
     return 1;
 }
-
-// Step 3: seed reference data. No-op - Phase 1 hasn't defined master data yet.
-await LogStepAsync(
-    platformDb,
-    tenant.TenantId,
-    "SeedDataLoaded",
-    OnboardingStepStatus.Success,
-    "No-op: no reference/master data defined yet (Phase 1 not started).");
-Console.WriteLine("  Seed reference data: skipped (nothing defined yet).");
-
-// Step 4: create admin user. No-op - no tenant-side auth schema yet (Phase 0 item 5).
-await LogStepAsync(
-    platformDb,
-    tenant.TenantId,
-    "AdminUserCreated",
-    OnboardingStepStatus.Success,
-    $"No-op: auth skeleton not yet built. Intended admin email: {options.AdminEmail}");
-Console.WriteLine("  Create admin user: skipped (auth skeleton not yet built).");
 
 // Step 5: activate.
 tenant.Status = TenantStatus.Active;
@@ -110,6 +137,7 @@ static ProvisionOptions? ParseArgs(string[] args)
     string? name = null;
     string? slug = null;
     string? adminEmail = null;
+    string? adminPassword = null;
 
     for (var i = 0; i < args.Length - 1; i++)
     {
@@ -124,15 +152,21 @@ static ProvisionOptions? ParseArgs(string[] args)
             case "--admin-email":
                 adminEmail = args[i + 1];
                 break;
+            case "--admin-password":
+                adminPassword = args[i + 1];
+                break;
         }
     }
 
-    if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(slug) || string.IsNullOrWhiteSpace(adminEmail))
+    if (string.IsNullOrWhiteSpace(name)
+        || string.IsNullOrWhiteSpace(slug)
+        || string.IsNullOrWhiteSpace(adminEmail)
+        || string.IsNullOrWhiteSpace(adminPassword))
     {
         return null;
     }
 
-    return new ProvisionOptions(name, slug, adminEmail);
+    return new ProvisionOptions(name, slug, adminEmail, adminPassword);
 }
 
 static async Task LogStepAsync(
@@ -154,4 +188,4 @@ static async Task LogStepAsync(
     await platformDb.SaveChangesAsync();
 }
 
-record ProvisionOptions(string Name, string Slug, string AdminEmail);
+record ProvisionOptions(string Name, string Slug, string AdminEmail, string AdminPassword);
