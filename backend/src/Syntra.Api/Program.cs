@@ -75,3 +75,9 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+// Top-level statements generate an internal Program class by default; make it
+// public so Syntra.Tests can reference it via WebApplicationFactory<Program>.
+public partial class Program
+{
+}
