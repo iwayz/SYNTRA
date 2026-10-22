@@ -182,6 +182,47 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.ToTable("ProductUnitConversions");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockMovement", b =>
+                {
+                    b.Property<int>("StockMovementId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockMovementId"));
+
+                    b.Property<string>("MovementType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Notes")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int?>("ReferenceId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("WarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StockMovementId");
+
+                    b.HasIndex("WarehouseId");
+
+                    b.HasIndex("ProductId", "WarehouseId");
+
+                    b.ToTable("StockMovements");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Inventory.UnitOfMeasure", b =>
                 {
                     b.Property<int>("UnitOfMeasureId")
@@ -459,6 +500,25 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("UnitOfMeasure");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockMovement", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.Warehouse", "Warehouse")
+                        .WithMany()
+                        .HasForeignKey("WarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Warehouse");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Inventory.Product", b =>

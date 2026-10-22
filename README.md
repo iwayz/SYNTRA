@@ -32,6 +32,6 @@ frontend/   React + Vite + TypeScript SPA (not yet started)
 
 **Phase 1 (single-tenant vertical slice) — in progress.**
 - [x] 1a — master data: units of measure, products (with unit conversions), warehouses, customers, suppliers
-- [ ] 1b — stock movement + balance
+- [x] 1b — stock movement + balance (manual adjustments, movement history, on-hand balance)
 - [ ] 1c — purchase order flow
 - [ ] 1d — sales order flow

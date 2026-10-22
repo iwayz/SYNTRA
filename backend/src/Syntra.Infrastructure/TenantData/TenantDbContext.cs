@@ -25,6 +25,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
+    public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -63,6 +64,21 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
                 .HasForeignKey(c => c.UnitOfMeasureId)
                 .OnDelete(DeleteBehavior.Restrict);
             e.Property(c => c.ConversionFactor).HasPrecision(18, 4);
+        });
+
+        modelBuilder.Entity<StockMovement>(e =>
+        {
+            e.HasIndex(m => new { m.ProductId, m.WarehouseId });
+            e.Property(m => m.MovementType).HasConversion<string>().HasMaxLength(20);
+            e.Property(m => m.Quantity).HasPrecision(18, 4);
+            e.HasOne(m => m.Product)
+                .WithMany()
+                .HasForeignKey(m => m.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(m => m.Warehouse)
+                .WithMany()
+                .HasForeignKey(m => m.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
     }
 }
