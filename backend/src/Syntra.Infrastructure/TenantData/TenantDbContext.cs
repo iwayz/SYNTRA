@@ -28,6 +28,8 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
+    public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
+    public DbSet<SalesOrderLine> SalesOrderLines => Set<SalesOrderLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -103,6 +105,36 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
             e.HasOne(l => l.PurchaseOrder)
                 .WithMany(o => o.Lines)
                 .HasForeignKey(l => l.PurchaseOrderId);
+            e.HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.UnitOfMeasure)
+                .WithMany()
+                .HasForeignKey(l => l.UnitOfMeasureId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SalesOrder>(e =>
+        {
+            e.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne(o => o.Customer)
+                .WithMany()
+                .HasForeignKey(o => o.CustomerId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(o => o.Warehouse)
+                .WithMany()
+                .HasForeignKey(o => o.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SalesOrderLine>(e =>
+        {
+            e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.UnitPrice).HasPrecision(18, 4);
+            e.HasOne(l => l.SalesOrder)
+                .WithMany(o => o.Lines)
+                .HasForeignKey(l => l.SalesOrderId);
             e.HasOne(l => l.Product)
                 .WithMany()
                 .HasForeignKey(l => l.ProductId)

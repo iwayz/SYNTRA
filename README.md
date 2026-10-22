@@ -30,8 +30,10 @@ frontend/   React + Vite + TypeScript SPA (not yet started)
 
 **Phase 0 (foundations) — complete.** Platform DB schema, subdomain-based tenant resolution, migration orchestrator, tenant provisioning pipeline, tenant end-user auth (Identity + JWT), isolation tests, module folder structure.
 
-**Phase 1 (single-tenant vertical slice) — in progress.**
+**Phase 1 (single-tenant vertical slice) — complete.**
 - [x] 1a — master data: units of measure, products (with unit conversions), warehouses, customers, suppliers
 - [x] 1b — stock movement + balance (manual adjustments, movement history, on-hand balance)
 - [x] 1c — purchase order flow (draft → confirm → receive, auto-generates stock movement)
-- [ ] 1d — sales order flow
+- [x] 1d — sales order flow (draft → confirm, with an oversell check, auto-generates stock movement)
+
+Next: Phase 2 — real multi-tenant + multi-branch.
