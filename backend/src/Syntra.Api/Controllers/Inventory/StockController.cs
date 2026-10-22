@@ -35,7 +35,10 @@ public class StockController : ControllerBase
     }
 
     [HttpGet("stock-movements")]
-    public async Task<IActionResult> ListMovements([FromQuery] int? productId, [FromQuery] int? warehouseId)
+    public async Task<IActionResult> ListMovements(
+        [FromQuery] int? productId,
+        [FromQuery] int? warehouseId,
+        [FromQuery] int? referenceId)
     {
         var query = _tenantDb.StockMovements.AsNoTracking();
 
@@ -47,6 +50,11 @@ public class StockController : ControllerBase
         if (warehouseId is not null)
         {
             query = query.Where(m => m.WarehouseId == warehouseId);
+        }
+
+        if (referenceId is not null)
+        {
+            query = query.Where(m => m.ReferenceId == referenceId);
         }
 
         var movements = await query.OrderByDescending(m => m.OccurredAt).ToListAsync();

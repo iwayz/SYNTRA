@@ -26,6 +26,8 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
+    public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -78,6 +80,36 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
             e.HasOne(m => m.Warehouse)
                 .WithMany()
                 .HasForeignKey(m => m.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PurchaseOrder>(e =>
+        {
+            e.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+            e.HasOne(o => o.Supplier)
+                .WithMany()
+                .HasForeignKey(o => o.SupplierId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(o => o.Warehouse)
+                .WithMany()
+                .HasForeignKey(o => o.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PurchaseOrderLine>(e =>
+        {
+            e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.UnitPrice).HasPrecision(18, 4);
+            e.HasOne(l => l.PurchaseOrder)
+                .WithMany(o => o.Lines)
+                .HasForeignKey(l => l.PurchaseOrderId);
+            e.HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.UnitOfMeasure)
+                .WithMany()
+                .HasForeignKey(l => l.UnitOfMeasureId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
     }
