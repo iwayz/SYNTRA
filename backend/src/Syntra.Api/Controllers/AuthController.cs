@@ -8,6 +8,8 @@ using Syntra.Domain.TenantData;
 namespace Syntra.Api.Controllers;
 
 public record LoginRequest(string Email, string Password);
+public record LoginResponse(string Token);
+public record MeResponse(string TenantSlug, int TenantId, string? UserId, string? Email, IEnumerable<string> Roles);
 
 [ApiController]
 [Route("auth")]
@@ -26,6 +28,8 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [ProducesResponseType<LoginResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> Login(LoginRequest request)
     {
         var user = await _userManager.FindByEmailAsync(request.Email);
@@ -38,20 +42,19 @@ public class AuthController : ControllerBase
         var roles = await _userManager.GetRolesAsync(user);
         var token = _tokenService.CreateToken(_currentTenant.TenantId, user, roles);
 
-        return Ok(new { token });
+        return Ok(new LoginResponse(token));
     }
 
     [HttpGet("me")]
     [Authorize]
+    [ProducesResponseType<MeResponse>(StatusCodes.Status200OK)]
     public IActionResult Me()
     {
-        return Ok(new
-        {
-            tenantSlug = _currentTenant.Slug,
-            tenantId = _currentTenant.TenantId,
-            userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
-            email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value,
-            roles = User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value)
-        });
+        return Ok(new MeResponse(
+            _currentTenant.Slug,
+            _currentTenant.TenantId,
+            User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value,
+            User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value,
+            User.FindAll(System.Security.Claims.ClaimTypes.Role).Select(c => c.Value)));
     }
 }

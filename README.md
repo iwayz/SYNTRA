@@ -8,8 +8,8 @@ Multi-tenant inventory, sales, and purchasing SaaS platform.
 - **Multi-tenancy:** database-per-tenant. A Platform DB (control plane only — tenant directory, subscriptions, module entitlements) resolves each request's tenant from its subdomain; each tenant's own database holds that tenant's business data and end-user accounts.
 - **ORM/DB:** EF Core against SQL Server.
 - **Auth:** ASP.NET Core Identity + JWT bearer tokens, scoped per tenant. A tenant's end-users live inside that tenant's own database, never centralized.
-- **Frontend:** React + Vite + TypeScript SPA, TanStack Query for server state, API client generated from the backend's OpenAPI spec (not yet started).
-- **API style:** REST + OpenAPI.
+- **Frontend:** React + Vite + TypeScript SPA, TanStack Query for server state, API client generated from the backend's OpenAPI spec via orval. JWT stored in `localStorage`, attached per-request via an axios interceptor.
+- **API style:** REST + OpenAPI. CORS enabled for `*.localhost` origins in dev (needs a real allow-list before production).
 
 ## Structure
 
@@ -23,7 +23,12 @@ backend/
     Syntra.TenantProvisioner/  Provisions a new tenant end-to-end (database, schema, admin user)
   tests/
     Syntra.Tests/              Tenant isolation integration tests
-frontend/   React + Vite + TypeScript SPA (not yet started)
+frontend/
+  src/
+    api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
+    auth/          Token storage, route guard
+    components/   Shell layout
+    pages/         Login, Dashboard (more pages land in FE-1b+)
 ```
 
 ## Status
@@ -36,4 +41,11 @@ frontend/   React + Vite + TypeScript SPA (not yet started)
 - [x] 1c — purchase order flow (draft → confirm → receive, auto-generates stock movement)
 - [x] 1d — sales order flow (draft → confirm, with an oversell check, auto-generates stock movement)
 
-Next: Phase 2 — real multi-tenant + multi-branch.
+**Frontend track (parallel to the backend phases, not part of the 0-6 numbering) — in progress.**
+- [x] FE-1a — shell & auth: login, authenticated shell, JWT handling, API client codegen
+- [ ] FE-1b — master data screens
+- [ ] FE-1c — stock screens
+- [ ] FE-1d — purchase order screens
+- [ ] FE-1e — sales order screens
+
+Next: Phase 2 (backend) — real multi-tenant + multi-branch — and/or FE-1b, running in parallel.

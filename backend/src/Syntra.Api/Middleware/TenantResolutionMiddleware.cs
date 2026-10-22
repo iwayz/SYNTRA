@@ -15,6 +15,15 @@ public class TenantResolutionMiddleware
 
     public async Task InvokeAsync(HttpContext context, PlatformDbContext platformDb, CurrentTenant currentTenant)
     {
+        // The API's own self-description isn't tenant business data, so it
+        // shouldn't require a valid tenant subdomain to view - exempt it
+        // rather than gate every "generic" endpoint behind tenant lookup.
+        if (context.Request.Path.StartsWithSegments("/openapi"))
+        {
+            await _next(context);
+            return;
+        }
+
         var slug = context.Request.Host.Host.Split('.')[0].ToLowerInvariant();
 
         var tenant = await platformDb.Tenants.AsNoTracking().FirstOrDefaultAsync(t => t.Slug == slug);
