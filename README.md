@@ -8,7 +8,7 @@ Multi-tenant inventory, sales, and purchasing SaaS platform.
 - **Multi-tenancy:** database-per-tenant. A Platform DB (control plane only — tenant directory, subscriptions, module entitlements) resolves each request's tenant from its subdomain; each tenant's own database holds that tenant's business data and end-user accounts.
 - **ORM/DB:** EF Core against SQL Server.
 - **Auth:** ASP.NET Core Identity + JWT bearer tokens, scoped per tenant. A tenant's end-users live inside that tenant's own database, never centralized.
-- **Frontend:** React + Vite + TypeScript SPA, TanStack Query for server state, API client generated from the backend's OpenAPI spec via orval. JWT stored in `localStorage`, attached per-request via an axios interceptor.
+- **Frontend:** React + Vite + TypeScript SPA, Tailwind CSS v4 for styling, TanStack Query for server state, API client generated from the backend's OpenAPI spec via orval. JWT stored in `localStorage`, attached per-request via an axios interceptor.
 - **API style:** REST + OpenAPI. CORS enabled for `*.localhost` origins in dev (needs a real allow-list before production).
 
 ## Structure
@@ -30,6 +30,24 @@ frontend/
     components/   Shell layout
     pages/         Login, Dashboard (more pages land in FE-1b+)
 ```
+
+## Running it locally
+
+Two terminals, both at once:
+
+```bash
+# Terminal 1 - backend API
+cd backend/src/Syntra.Api
+dotnet run --urls "http://localhost:5299"
+
+# Terminal 2 - frontend
+cd frontend
+npm run dev
+```
+
+Then open `http://<tenant-slug>.localhost:5173` — the subdomain matters, it's how the backend resolves which tenant's database to use. A persistent demo tenant exists for exploring the UI: `demo.localhost:5173`, login `admin@demo.com` / `Demo123!`.
+
+To regenerate the frontend's API client after a backend endpoint changes: `npm run codegen` (requires the API running).
 
 ## Status
 
