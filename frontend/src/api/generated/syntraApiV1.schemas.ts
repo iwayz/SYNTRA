@@ -111,7 +111,14 @@ export interface MeResponse {
   roles: string[];
 }
 
-export type MovementType = number;
+export type MovementType = typeof MovementType[keyof typeof MovementType];
+
+
+export const MovementType = {
+  Purchase: 'Purchase',
+  Sale: 'Sale',
+  ManualAdjustment: 'ManualAdjustment',
+} as const;
 
 export interface ProblemDetails {
   /** @nullable */
@@ -172,7 +179,15 @@ export interface Warehouse {
   name?: string;
 }
 
-export type PurchaseOrderStatus = number;
+export type PurchaseOrderStatus = typeof PurchaseOrderStatus[keyof typeof PurchaseOrderStatus];
+
+
+export const PurchaseOrderStatus = {
+  Draft: 'Draft',
+  Confirmed: 'Confirmed',
+  Received: 'Received',
+  Cancelled: 'Cancelled',
+} as const;
 
 export interface PurchaseOrderLine {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
@@ -206,7 +221,14 @@ export interface PurchaseOrder {
   lines?: PurchaseOrderLine[];
 }
 
-export type SalesOrderStatus = number;
+export type SalesOrderStatus = typeof SalesOrderStatus[keyof typeof SalesOrderStatus];
+
+
+export const SalesOrderStatus = {
+  Draft: 'Draft',
+  Confirmed: 'Confirmed',
+  Cancelled: 'Cancelled',
+} as const;
 
 export interface SalesOrderLine {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
