@@ -35,7 +35,7 @@ public class StockController : ControllerBase
     }
 
     [HttpGet("stock-movements")]
-    public async Task<IActionResult> ListMovements(
+    public async Task<ActionResult<IEnumerable<StockMovement>>> ListMovements(
         [FromQuery] int? productId,
         [FromQuery] int? warehouseId,
         [FromQuery] int? referenceId)
@@ -62,7 +62,7 @@ public class StockController : ControllerBase
     }
 
     [HttpGet("stock-balance")]
-    public async Task<IActionResult> GetBalance([FromQuery] int? productId, [FromQuery] int? warehouseId)
+    public async Task<ActionResult<IEnumerable<StockBalance>>> GetBalance([FromQuery] int? productId, [FromQuery] int? warehouseId)
     {
         var query = _tenantDb.StockMovements.AsNoTracking();
 
@@ -85,7 +85,7 @@ public class StockController : ControllerBase
     }
 
     [HttpPost("stock-adjustments")]
-    public async Task<IActionResult> CreateAdjustment(CreateStockAdjustmentRequest request)
+    public async Task<ActionResult<StockMovement>> CreateAdjustment(CreateStockAdjustmentRequest request)
     {
         var productExists = await _tenantDb.Products.AnyAsync(p => p.ProductId == request.ProductId);
         if (!productExists)

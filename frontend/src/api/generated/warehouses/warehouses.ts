@@ -24,7 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateWarehouseRequest
+  CreateWarehouseRequest,
+  Warehouse
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -53,7 +54,7 @@ export const getInventoryWarehouses = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Warehouse[]>(
       {url: `/inventory/warehouses`, method: 'GET', signal
     },
       );
@@ -139,7 +140,7 @@ export const postInventoryWarehouses = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Warehouse>(
       {url: `/inventory/warehouses`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createWarehouseRequest, signal
@@ -200,7 +201,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Warehouse>(
       {url: `/inventory/warehouses/${id}`, method: 'GET', signal
     },
       );

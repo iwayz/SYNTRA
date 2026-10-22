@@ -24,7 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateSalesOrderRequest
+  CreateSalesOrderRequest,
+  SalesOrder
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -53,7 +54,7 @@ export const getSalesSalesOrders = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<SalesOrder[]>(
       {url: `/sales/sales-orders`, method: 'GET', signal
     },
       );
@@ -139,7 +140,7 @@ export const postSalesSalesOrders = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<SalesOrder>(
       {url: `/sales/sales-orders`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSalesOrderRequest, signal
@@ -200,7 +201,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<SalesOrder>(
       {url: `/sales/sales-orders/${id}`, method: 'GET', signal
     },
       );
@@ -286,7 +287,7 @@ export const postSalesSalesOrdersIdConfirm = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<SalesOrder>(
       {url: `/sales/sales-orders/${id}/confirm`, method: 'POST', signal
     },
       );
@@ -345,7 +346,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<SalesOrder>(
       {url: `/sales/sales-orders/${id}/cancel`, method: 'POST', signal
     },
       );

@@ -51,7 +51,7 @@ public class PurchaseOrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<PurchaseOrder>>> List()
     {
         var orders = await _tenantDb.PurchaseOrders.AsNoTracking()
             .Include(o => o.Supplier)
@@ -62,7 +62,7 @@ public class PurchaseOrdersController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<PurchaseOrder>> Get(int id)
     {
         var order = await _tenantDb.PurchaseOrders.AsNoTracking()
             .Include(o => o.Supplier)
@@ -75,7 +75,7 @@ public class PurchaseOrdersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreatePurchaseOrderRequest request)
+    public async Task<ActionResult<PurchaseOrder>> Create(CreatePurchaseOrderRequest request)
     {
         var supplierExists = await _tenantDb.Suppliers.AnyAsync(s => s.SupplierId == request.SupplierId);
         if (!supplierExists)
@@ -144,7 +144,7 @@ public class PurchaseOrdersController : ControllerBase
     }
 
     [HttpPost("{id:int}/confirm")]
-    public async Task<IActionResult> Confirm(int id)
+    public async Task<ActionResult<PurchaseOrder>> Confirm(int id)
     {
         var order = await _tenantDb.PurchaseOrders.FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
         if (order is null)
@@ -164,7 +164,7 @@ public class PurchaseOrdersController : ControllerBase
     }
 
     [HttpPost("{id:int}/receive")]
-    public async Task<IActionResult> Receive(int id)
+    public async Task<ActionResult<PurchaseOrder>> Receive(int id)
     {
         var order = await _tenantDb.PurchaseOrders
             .Include(o => o.Lines)
@@ -213,7 +213,7 @@ public class PurchaseOrdersController : ControllerBase
     }
 
     [HttpPost("{id:int}/cancel")]
-    public async Task<IActionResult> Cancel(int id)
+    public async Task<ActionResult<PurchaseOrder>> Cancel(int id)
     {
         var order = await _tenantDb.PurchaseOrders.FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
         if (order is null)

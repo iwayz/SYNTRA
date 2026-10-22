@@ -85,6 +85,12 @@ export interface CreateWarehouseRequest {
   name: string;
 }
 
+export interface Customer {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  customerId?: number | string;
+  name?: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -105,6 +111,8 @@ export interface MeResponse {
   roles: string[];
 }
 
+export type MovementType = number;
+
 export interface ProblemDetails {
   /** @nullable */
   type?: string | null;
@@ -119,6 +127,148 @@ export interface ProblemDetails {
   detail?: string | null;
   /** @nullable */
   instance?: string | null;
+}
+
+export interface UnitOfMeasure {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  unitOfMeasureId?: number | string;
+  code?: string;
+  name?: string;
+}
+
+export interface ProductUnitConversion {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productUnitConversionId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  product?: Product;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  unitOfMeasureId?: number | string;
+  unitOfMeasure?: UnitOfMeasure;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  conversionFactor?: number | string;
+}
+
+export interface Product {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  sku?: string;
+  name?: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  baseUnitOfMeasureId?: number | string;
+  baseUnitOfMeasure?: UnitOfMeasure;
+  unitConversions?: ProductUnitConversion[];
+}
+
+export interface Supplier {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  supplierId?: number | string;
+  name?: string;
+}
+
+export interface Warehouse {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId?: number | string;
+  name?: string;
+}
+
+export type PurchaseOrderStatus = number;
+
+export interface PurchaseOrderLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderId?: number | string;
+  purchaseOrder?: PurchaseOrder;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  product?: Product;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  unitOfMeasureId?: number | string;
+  unitOfMeasure?: UnitOfMeasure;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  unitPrice?: number | string;
+}
+
+export interface PurchaseOrder {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  supplierId?: number | string;
+  supplier?: Supplier;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId?: number | string;
+  warehouse?: Warehouse;
+  orderDate?: string;
+  status?: PurchaseOrderStatus;
+  lines?: PurchaseOrderLine[];
+}
+
+export type SalesOrderStatus = number;
+
+export interface SalesOrderLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesOrderLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesOrderId?: number | string;
+  salesOrder?: SalesOrder;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  product?: Product;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  unitOfMeasureId?: number | string;
+  unitOfMeasure?: UnitOfMeasure;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  unitPrice?: number | string;
+}
+
+export interface SalesOrder {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesOrderId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  customerId?: number | string;
+  customer?: Customer;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId?: number | string;
+  warehouse?: Warehouse;
+  orderDate?: string;
+  status?: SalesOrderStatus;
+  lines?: SalesOrderLine[];
+}
+
+export interface StockBalance {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantityOnHand: number | string;
+}
+
+export interface StockMovement {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockMovementId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  product?: Product;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId?: number | string;
+  warehouse?: Warehouse;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  movementType?: MovementType;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  referenceId?: number | string | null;
+  occurredAt?: string;
+  /** @nullable */
+  notes?: string | null;
 }
 
 export interface WeatherForecast {

@@ -31,21 +31,21 @@ public class UnitOfMeasuresController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<UnitOfMeasure>>> List()
     {
         var units = await _tenantDb.UnitOfMeasures.AsNoTracking().ToListAsync();
         return Ok(units);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<UnitOfMeasure>> Get(int id)
     {
         var unit = await _tenantDb.UnitOfMeasures.AsNoTracking().FirstOrDefaultAsync(u => u.UnitOfMeasureId == id);
         return unit is null ? NotFound() : Ok(unit);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateUnitOfMeasureRequest request)
+    public async Task<ActionResult<UnitOfMeasure>> Create(CreateUnitOfMeasureRequest request)
     {
         var unit = new UnitOfMeasure { Code = request.Code, Name = request.Name };
 

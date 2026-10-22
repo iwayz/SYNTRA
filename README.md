@@ -9,7 +9,7 @@ Multi-tenant inventory, sales, and purchasing SaaS platform.
 - **ORM/DB:** EF Core against SQL Server.
 - **Auth:** ASP.NET Core Identity + JWT bearer tokens, scoped per tenant. A tenant's end-users live inside that tenant's own database, never centralized.
 - **Frontend:** React + Vite + TypeScript SPA, Tailwind CSS v4 for styling, TanStack Query for server state, API client generated from the backend's OpenAPI spec via orval. JWT stored in `localStorage`, attached per-request via an axios interceptor.
-- **API style:** REST + OpenAPI. CORS enabled for `*.localhost` origins in dev (needs a real allow-list before production).
+- **API style:** REST + OpenAPI. CORS enabled for `*.localhost` origins in dev (needs a real allow-list before production). Controller actions always return `ActionResult<T>`, never bare `IActionResult` — the latter gives the OpenAPI generator no static type to work with, silently breaking the generated frontend client (hit this bug twice already).
 
 ## Structure
 
@@ -28,7 +28,7 @@ frontend/
     api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
     auth/          Token storage, route guard
     components/   Shell layout
-    pages/         Login, Dashboard (more pages land in FE-1b+)
+    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers
 ```
 
 ## Running it locally
@@ -61,7 +61,7 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 
 **Frontend track (parallel to the backend phases, not part of the 0-6 numbering) — in progress.**
 - [x] FE-1a — shell & auth: login, authenticated shell, JWT handling, API client codegen
-- [ ] FE-1b — master data screens
+- [x] FE-1b — master data screens: units of measure, products (+ unit conversions), warehouses, customers, suppliers
 - [ ] FE-1c — stock screens
 - [ ] FE-1d — purchase order screens
 - [ ] FE-1e — sales order screens

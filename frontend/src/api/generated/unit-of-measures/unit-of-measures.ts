@@ -24,7 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateUnitOfMeasureRequest
+  CreateUnitOfMeasureRequest,
+  UnitOfMeasure
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -53,7 +54,7 @@ export const getInventoryUnitsOfMeasure = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<UnitOfMeasure[]>(
       {url: `/inventory/units-of-measure`, method: 'GET', signal
     },
       );
@@ -139,7 +140,7 @@ export const postInventoryUnitsOfMeasure = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<UnitOfMeasure>(
       {url: `/inventory/units-of-measure`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createUnitOfMeasureRequest, signal
@@ -200,7 +201,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<UnitOfMeasure>(
       {url: `/inventory/units-of-measure/${id}`, method: 'GET', signal
     },
       );

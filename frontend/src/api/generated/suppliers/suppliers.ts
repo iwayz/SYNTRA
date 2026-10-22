@@ -24,7 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateSupplierRequest
+  CreateSupplierRequest,
+  Supplier
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -53,7 +54,7 @@ export const getPurchasingSuppliers = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Supplier[]>(
       {url: `/purchasing/suppliers`, method: 'GET', signal
     },
       );
@@ -139,7 +140,7 @@ export const postPurchasingSuppliers = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Supplier>(
       {url: `/purchasing/suppliers`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createSupplierRequest, signal
@@ -200,7 +201,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Supplier>(
       {url: `/purchasing/suppliers/${id}`, method: 'GET', signal
     },
       );

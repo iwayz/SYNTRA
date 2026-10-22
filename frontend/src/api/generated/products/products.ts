@@ -25,7 +25,9 @@ import type {
 
 import type {
   CreateProductRequest,
-  CreateProductUnitConversionRequest
+  CreateProductUnitConversionRequest,
+  Product,
+  ProductUnitConversion
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -54,7 +56,7 @@ export const getInventoryProducts = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Product[]>(
       {url: `/inventory/products`, method: 'GET', signal
     },
       );
@@ -140,7 +142,7 @@ export const postInventoryProducts = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Product>(
       {url: `/inventory/products`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createProductRequest, signal
@@ -201,7 +203,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Product>(
       {url: `/inventory/products/${id}`, method: 'GET', signal
     },
       );
@@ -288,7 +290,7 @@ export const postInventoryProductsIdUnitConversions = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<ProductUnitConversion>(
       {url: `/inventory/products/${id}/unit-conversions`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createProductUnitConversionRequest, signal

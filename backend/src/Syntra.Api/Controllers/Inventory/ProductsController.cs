@@ -43,7 +43,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<Product>>> List()
     {
         var products = await _tenantDb.Products.AsNoTracking()
             .Include(p => p.BaseUnitOfMeasure)
@@ -53,7 +53,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<Product>> Get(int id)
     {
         var product = await _tenantDb.Products.AsNoTracking()
             .Include(p => p.BaseUnitOfMeasure)
@@ -65,7 +65,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateProductRequest request)
+    public async Task<ActionResult<Product>> Create(CreateProductRequest request)
     {
         var baseUnitExists = await _tenantDb.UnitOfMeasures.AnyAsync(u => u.UnitOfMeasureId == request.BaseUnitOfMeasureId);
         if (!baseUnitExists)
@@ -87,7 +87,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id:int}/unit-conversions")]
-    public async Task<IActionResult> AddUnitConversion(int id, CreateProductUnitConversionRequest request)
+    public async Task<ActionResult<ProductUnitConversion>> AddUnitConversion(int id, CreateProductUnitConversionRequest request)
     {
         var product = await _tenantDb.Products.FirstOrDefaultAsync(p => p.ProductId == id);
         if (product is null)

@@ -30,21 +30,21 @@ public class WarehousesController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<Warehouse>>> List()
     {
         var warehouses = await _tenantDb.Warehouses.AsNoTracking().ToListAsync();
         return Ok(warehouses);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<Warehouse>> Get(int id)
     {
         var warehouse = await _tenantDb.Warehouses.AsNoTracking().FirstOrDefaultAsync(w => w.WarehouseId == id);
         return warehouse is null ? NotFound() : Ok(warehouse);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateWarehouseRequest request)
+    public async Task<ActionResult<Warehouse>> Create(CreateWarehouseRequest request)
     {
         var warehouse = new Warehouse { Name = request.Name };
 

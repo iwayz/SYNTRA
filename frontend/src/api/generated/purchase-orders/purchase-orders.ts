@@ -24,7 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreatePurchaseOrderRequest
+  CreatePurchaseOrderRequest,
+  PurchaseOrder
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -53,7 +54,7 @@ export const getPurchasingPurchaseOrders = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<PurchaseOrder[]>(
       {url: `/purchasing/purchase-orders`, method: 'GET', signal
     },
       );
@@ -139,7 +140,7 @@ export const postPurchasingPurchaseOrders = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<PurchaseOrder>(
       {url: `/purchasing/purchase-orders`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createPurchaseOrderRequest, signal
@@ -200,7 +201,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<PurchaseOrder>(
       {url: `/purchasing/purchase-orders/${id}`, method: 'GET', signal
     },
       );
@@ -286,7 +287,7 @@ export const postPurchasingPurchaseOrdersIdConfirm = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<PurchaseOrder>(
       {url: `/purchasing/purchase-orders/${id}/confirm`, method: 'POST', signal
     },
       );
@@ -345,7 +346,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<PurchaseOrder>(
       {url: `/purchasing/purchase-orders/${id}/receive`, method: 'POST', signal
     },
       );
@@ -404,7 +405,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<PurchaseOrder>(
       {url: `/purchasing/purchase-orders/${id}/cancel`, method: 'POST', signal
     },
       );

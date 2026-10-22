@@ -30,21 +30,21 @@ public class SuppliersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<Supplier>>> List()
     {
         var suppliers = await _tenantDb.Suppliers.AsNoTracking().ToListAsync();
         return Ok(suppliers);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<Supplier>> Get(int id)
     {
         var supplier = await _tenantDb.Suppliers.AsNoTracking().FirstOrDefaultAsync(s => s.SupplierId == id);
         return supplier is null ? NotFound() : Ok(supplier);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateSupplierRequest request)
+    public async Task<ActionResult<Supplier>> Create(CreateSupplierRequest request)
     {
         var supplier = new Supplier { Name = request.Name };
 

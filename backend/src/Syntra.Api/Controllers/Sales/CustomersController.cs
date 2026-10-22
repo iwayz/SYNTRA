@@ -30,21 +30,21 @@ public class CustomersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<Customer>>> List()
     {
         var customers = await _tenantDb.Customers.AsNoTracking().ToListAsync();
         return Ok(customers);
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<Customer>> Get(int id)
     {
         var customer = await _tenantDb.Customers.AsNoTracking().FirstOrDefaultAsync(c => c.CustomerId == id);
         return customer is null ? NotFound() : Ok(customer);
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateCustomerRequest request)
+    public async Task<ActionResult<Customer>> Create(CreateCustomerRequest request)
     {
         var customer = new Customer { Name = request.Name };
 

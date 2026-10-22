@@ -26,7 +26,9 @@ import type {
 import type {
   CreateStockAdjustmentRequest,
   GetInventoryStockBalanceParams,
-  GetInventoryStockMovementsParams
+  GetInventoryStockMovementsParams,
+  StockBalance,
+  StockMovement
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -55,7 +57,7 @@ export const getInventoryStockMovements = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<StockMovement[]>(
       {url: `/inventory/stock-movements`, method: 'GET',
         params, signal
     },
@@ -142,7 +144,7 @@ export const getInventoryStockBalance = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<StockBalance[]>(
       {url: `/inventory/stock-balance`, method: 'GET',
         params, signal
     },
@@ -229,7 +231,7 @@ export const postInventoryStockAdjustments = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<StockMovement>(
       {url: `/inventory/stock-adjustments`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createStockAdjustmentRequest, signal

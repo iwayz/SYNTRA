@@ -51,7 +51,7 @@ public class SalesOrdersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> List()
+    public async Task<ActionResult<IEnumerable<SalesOrder>>> List()
     {
         var orders = await _tenantDb.SalesOrders.AsNoTracking()
             .Include(o => o.Customer)
@@ -62,7 +62,7 @@ public class SalesOrdersController : ControllerBase
     }
 
     [HttpGet("{id:int}")]
-    public async Task<IActionResult> Get(int id)
+    public async Task<ActionResult<SalesOrder>> Get(int id)
     {
         var order = await _tenantDb.SalesOrders.AsNoTracking()
             .Include(o => o.Customer)
@@ -75,7 +75,7 @@ public class SalesOrdersController : ControllerBase
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateSalesOrderRequest request)
+    public async Task<ActionResult<SalesOrder>> Create(CreateSalesOrderRequest request)
     {
         var customerExists = await _tenantDb.Customers.AnyAsync(c => c.CustomerId == request.CustomerId);
         if (!customerExists)
@@ -144,7 +144,7 @@ public class SalesOrdersController : ControllerBase
     }
 
     [HttpPost("{id:int}/confirm")]
-    public async Task<IActionResult> Confirm(int id)
+    public async Task<ActionResult<SalesOrder>> Confirm(int id)
     {
         var order = await _tenantDb.SalesOrders
             .Include(o => o.Lines)
@@ -229,7 +229,7 @@ public class SalesOrdersController : ControllerBase
     }
 
     [HttpPost("{id:int}/cancel")]
-    public async Task<IActionResult> Cancel(int id)
+    public async Task<ActionResult<SalesOrder>> Cancel(int id)
     {
         var order = await _tenantDb.SalesOrders.FirstOrDefaultAsync(o => o.SalesOrderId == id);
         if (order is null)

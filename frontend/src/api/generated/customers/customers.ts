@@ -24,7 +24,8 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
-  CreateCustomerRequest
+  CreateCustomerRequest,
+  Customer
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -53,7 +54,7 @@ export const getSalesCustomers = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Customer[]>(
       {url: `/sales/customers`, method: 'GET', signal
     },
       );
@@ -139,7 +140,7 @@ export const postSalesCustomers = (
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Customer>(
       {url: `/sales/customers`, method: 'POST',
       headers: {'Content-Type': 'application/json', },
       data: createCustomerRequest, signal
@@ -200,7 +201,7 @@ const {mutation: mutationOptions} = options ?
 ) => {
 
 
-      return customInstance<void>(
+      return customInstance<Customer>(
       {url: `/sales/customers/${id}`, method: 'GET', signal
     },
       );

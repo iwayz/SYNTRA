@@ -26,7 +26,22 @@ export function Shell() {
             <NavLink to="/" end className={navLinkClasses}>
               Dashboard
             </NavLink>
-            {/* Products/Stock/Purchasing/Sales links are added in FE-1b+ once those pages exist */}
+            <NavLink to="/products" className={navLinkClasses}>
+              Products
+            </NavLink>
+            <NavLink to="/units-of-measure" className={navLinkClasses}>
+              Units of Measure
+            </NavLink>
+            <NavLink to="/warehouses" className={navLinkClasses}>
+              Warehouses
+            </NavLink>
+            <NavLink to="/customers" className={navLinkClasses}>
+              Customers
+            </NavLink>
+            <NavLink to="/suppliers" className={navLinkClasses}>
+              Suppliers
+            </NavLink>
+            {/* Stock/Purchasing/Sales links are added in FE-1c+ once those pages exist */}
           </nav>
         </div>
         <div className="flex items-center gap-4">
