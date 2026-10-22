@@ -28,7 +28,7 @@ frontend/
     api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
     auth/          Token storage, route guard
     components/   Shell layout
-    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers
+    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements
 ```
 
 ## Running it locally
@@ -62,8 +62,10 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 **Frontend track (parallel to the backend phases, not part of the 0-6 numbering) — in progress.**
 - [x] FE-1a — shell & auth: login, authenticated shell, JWT handling, API client codegen
 - [x] FE-1b — master data screens: units of measure, products (+ unit conversions), warehouses, customers, suppliers
-- [ ] FE-1c — stock screens
+- [x] FE-1c — stock screens: balance view, filterable movement history, manual adjustment
 - [ ] FE-1d — purchase order screens
 - [ ] FE-1e — sales order screens
 
-Next: Phase 2 (backend) — real multi-tenant + multi-branch — and/or FE-1b, running in parallel.
+**Known issue to fix before FE-1d:** `PurchaseOrderStatus`/`SalesOrderStatus` (and `MovementType`) generate as `number` in the frontend's TypeScript types despite being string-serialized at runtime — ASP.NET Core's OpenAPI generator doesn't honor a globally-configured `JsonStringEnumConverter`, only one applied directly to the enum type. FE-1d needs real status-based conditional rendering (e.g. only show "Confirm" when status is Draft), so this needs a proper fix first.
+
+Next: Phase 2 (backend) — real multi-tenant + multi-branch — and/or FE-1d, running in parallel.

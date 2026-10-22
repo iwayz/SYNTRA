@@ -243,8 +243,11 @@ export interface SalesOrder {
 export interface StockBalance {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   productId: number | string;
+  productSku: string;
+  productName: string;
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   warehouseId: number | string;
+  warehouseName: string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   quantityOnHand: number | string;
 }

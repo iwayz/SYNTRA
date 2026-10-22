@@ -41,7 +41,13 @@ export function Shell() {
             <NavLink to="/suppliers" className={navLinkClasses}>
               Suppliers
             </NavLink>
-            {/* Stock/Purchasing/Sales links are added in FE-1c+ once those pages exist */}
+            <NavLink to="/stock-balance" className={navLinkClasses}>
+              Stock Balance
+            </NavLink>
+            <NavLink to="/stock-movements" className={navLinkClasses}>
+              Stock Movements
+            </NavLink>
+            {/* Purchasing/Sales links are added in FE-1d+ once those pages exist */}
           </nav>
         </div>
         <div className="flex items-center gap-4">

@@ -20,7 +20,13 @@ public class CreateStockAdjustmentRequestValidator : AbstractValidator<CreateSto
     }
 }
 
-public record StockBalance(int ProductId, int WarehouseId, decimal QuantityOnHand);
+public record StockBalance(
+    int ProductId,
+    string ProductSku,
+    string ProductName,
+    int WarehouseId,
+    string WarehouseName,
+    decimal QuantityOnHand);
 
 [ApiController]
 [Authorize]
@@ -40,7 +46,10 @@ public class StockController : ControllerBase
         [FromQuery] int? warehouseId,
         [FromQuery] int? referenceId)
     {
-        var query = _tenantDb.StockMovements.AsNoTracking();
+        var query = _tenantDb.StockMovements.AsNoTracking()
+            .Include(m => m.Product)
+            .Include(m => m.Warehouse)
+            .AsQueryable();
 
         if (productId is not null)
         {
@@ -76,10 +85,29 @@ public class StockController : ControllerBase
             query = query.Where(m => m.WarehouseId == warehouseId);
         }
 
-        var balances = await query
+        var rawBalances = await query
             .GroupBy(m => new { m.ProductId, m.WarehouseId })
-            .Select(g => new StockBalance(g.Key.ProductId, g.Key.WarehouseId, g.Sum(m => m.Quantity)))
+            .Select(g => new { g.Key.ProductId, g.Key.WarehouseId, Quantity = g.Sum(m => m.Quantity) })
             .ToListAsync();
+
+        var productIds = rawBalances.Select(b => b.ProductId).Distinct().ToList();
+        var warehouseIds = rawBalances.Select(b => b.WarehouseId).Distinct().ToList();
+
+        var products = await _tenantDb.Products.AsNoTracking()
+            .Where(p => productIds.Contains(p.ProductId))
+            .ToDictionaryAsync(p => p.ProductId);
+
+        var warehouses = await _tenantDb.Warehouses.AsNoTracking()
+            .Where(w => warehouseIds.Contains(w.WarehouseId))
+            .ToDictionaryAsync(w => w.WarehouseId);
+
+        var balances = rawBalances.Select(b => new StockBalance(
+            b.ProductId,
+            products[b.ProductId].Sku,
+            products[b.ProductId].Name,
+            b.WarehouseId,
+            warehouses[b.WarehouseId].Name,
+            b.Quantity)).ToList();
 
         return Ok(balances);
     }

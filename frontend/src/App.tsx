@@ -6,6 +6,8 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
 import { ProductDetailPage } from "./pages/ProductDetailPage";
 import { ProductsPage } from "./pages/ProductsPage";
+import { StockBalancePage } from "./pages/StockBalancePage";
+import { StockMovementsPage } from "./pages/StockMovementsPage";
 import { SuppliersPage } from "./pages/SuppliersPage";
 import { UnitsOfMeasurePage } from "./pages/UnitsOfMeasurePage";
 import { WarehousesPage } from "./pages/WarehousesPage";
@@ -23,6 +25,8 @@ function App() {
           <Route path="/warehouses" element={<WarehousesPage />} />
           <Route path="/customers" element={<CustomersPage />} />
           <Route path="/suppliers" element={<SuppliersPage />} />
+          <Route path="/stock-balance" element={<StockBalancePage />} />
+          <Route path="/stock-movements" element={<StockMovementsPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
