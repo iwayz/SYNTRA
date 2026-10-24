@@ -28,7 +28,7 @@ frontend/
     api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
     auth/          Token storage, route guard
     components/   Shell layout
-    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements, Purchase Orders (list/create/detail)
+    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements, Purchase Orders and Sales Orders (list/create/detail)
 ```
 
 ## Running it locally
@@ -59,11 +59,11 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 - [x] 1c — purchase order flow (draft → confirm → receive, auto-generates stock movement)
 - [x] 1d — sales order flow (draft → confirm, with an oversell check, auto-generates stock movement)
 
-**Frontend track (parallel to the backend phases, not part of the 0-6 numbering) — in progress.**
+**Frontend track (parallel to the backend phases, not part of the 0-6 numbering) — complete.**
 - [x] FE-1a — shell & auth: login, authenticated shell, JWT handling, API client codegen
 - [x] FE-1b — master data screens: units of measure, products (+ unit conversions), warehouses, customers, suppliers
 - [x] FE-1c — stock screens: balance view, filterable movement history, manual adjustment
 - [x] FE-1d — purchase order screens: list, create (dynamic lines), detail with status-based actions (confirm/receive/cancel)
-- [ ] FE-1e — sales order screens
+- [x] FE-1e — sales order screens: list, create (dynamic lines), detail; confirm surfaces the backend oversell message
 
-Next: Phase 2 (backend) — real multi-tenant + multi-branch — and/or FE-1e, running in parallel.
+Next: Phase 2 (backend) — real multi-tenant + multi-branch.

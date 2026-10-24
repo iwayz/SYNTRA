@@ -50,7 +50,9 @@ export function Shell() {
             <NavLink to="/purchase-orders" className={navLinkClasses}>
               Purchase Orders
             </NavLink>
-            {/* Sales order links are added in FE-1e once those pages exist */}
+            <NavLink to="/sales-orders" className={navLinkClasses}>
+              Sales Orders
+            </NavLink>
           </nav>
         </div>
         <div className="flex items-center gap-4">

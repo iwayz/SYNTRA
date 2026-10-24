@@ -9,6 +9,9 @@ import { ProductsPage } from "./pages/ProductsPage";
 import { PurchaseOrderCreatePage } from "./pages/PurchaseOrderCreatePage";
 import { PurchaseOrderDetailPage } from "./pages/PurchaseOrderDetailPage";
 import { PurchaseOrdersPage } from "./pages/PurchaseOrdersPage";
+import { SalesOrderCreatePage } from "./pages/SalesOrderCreatePage";
+import { SalesOrderDetailPage } from "./pages/SalesOrderDetailPage";
+import { SalesOrdersPage } from "./pages/SalesOrdersPage";
 import { StockBalancePage } from "./pages/StockBalancePage";
 import { StockMovementsPage } from "./pages/StockMovementsPage";
 import { SuppliersPage } from "./pages/SuppliersPage";
@@ -33,6 +36,9 @@ function App() {
           <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
           <Route path="/purchase-orders/new" element={<PurchaseOrderCreatePage />} />
           <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
+          <Route path="/sales-orders" element={<SalesOrdersPage />} />
+          <Route path="/sales-orders/new" element={<SalesOrderCreatePage />} />
+          <Route path="/sales-orders/:id" element={<SalesOrderDetailPage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
