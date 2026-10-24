@@ -19,6 +19,7 @@ import { StockBalancePage } from "./pages/StockBalancePage";
 import { StockMovementsPage } from "./pages/StockMovementsPage";
 import { SuppliersPage } from "./pages/SuppliersPage";
 import { UnitsOfMeasurePage } from "./pages/UnitsOfMeasurePage";
+import { UsersPage } from "./pages/UsersPage";
 import { WarehousesPage } from "./pages/WarehousesPage";
 
 function App() {
@@ -45,6 +46,7 @@ function App() {
           <Route path="/account" element={<AccountPage />} />
           <Route element={<RequireAdmin />}>
             <Route path="/branches" element={<BranchesPage />} />
+            <Route path="/users" element={<UsersPage />} />
           </Route>
         </Route>
       </Route>

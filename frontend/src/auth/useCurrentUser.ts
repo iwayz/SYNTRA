@@ -8,6 +8,7 @@ export function useCurrentUser() {
   return {
     isLoading: me.isLoading,
     isLoaded: me.data !== undefined,
+    userId: me.data?.userId ? Number(me.data.userId) : null,
     email: me.data?.email ?? null,
     isAdmin: me.data?.isAdmin ?? false,
     branchIds: (me.data?.branchIds ?? []).map(Number),

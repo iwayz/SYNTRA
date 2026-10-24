@@ -54,9 +54,14 @@ export function Shell() {
               Sales Orders
             </NavLink>
             {isAdmin && (
-              <NavLink to="/branches" className={navLinkClasses}>
-                Branches
-              </NavLink>
+              <>
+                <NavLink to="/branches" className={navLinkClasses}>
+                  Branches
+                </NavLink>
+                <NavLink to="/users" className={navLinkClasses}>
+                  Users
+                </NavLink>
+              </>
             )}
           </nav>
         </div>

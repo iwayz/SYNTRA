@@ -28,7 +28,7 @@ frontend/
     api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
     auth/          Token storage, route guards (sign-in, admin-only), current-user hook
     components/   Shell layout
-    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements, Purchase Orders and Sales Orders (list/create/detail), Branches (admin), Account (change password)
+    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements, Purchase Orders and Sales Orders (list/create/detail), Branches and Users (admin), Account (change password)
 ```
 
 ## Running it locally
@@ -73,5 +73,5 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 - [x] 2d — cross-tenant business-data isolation tests (two seeded tenants with colliding ids and shared SKU/codes/email: list and by-id sweeps, per-tenant uniqueness, separate credentials, write isolation, concurrent reads/writes, direct database check, host-header spoofing) plus a second persistent demo tenant, `demo2`, to compare against `demo`. Branch-scoping tests shipped with 2c
 - [ ] 2e — frontend (in progress):
   - [x] 2e-1 — current-user hook, admin-only nav and route guard, no-branch banner, Branches page (create/edit/deactivate), Account page (change own password), Dashboard showing role and visible branches
-  - [ ] 2e-2 — Users page (create, branches, activate/deactivate, promote/demote, reset password)
+  - [x] 2e-2 — Users page (admin): list with role/status/branches, create form, per-row edit branches, activate/deactivate, make/remove admin, reset password; actions on your own row are disabled
   - [ ] 2e-3 — global branch switcher, branch columns, better create-form errors
