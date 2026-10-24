@@ -321,6 +321,9 @@ export interface StockBalance {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   warehouseId: number | string;
   warehouseName: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  branchId: number | string;
+  branchName: string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   quantityOnHand: number | string;
 }
@@ -373,6 +376,20 @@ export interface WeatherForecast {
   summary?: string | null;
 }
 
+export type GetSalesSalesOrdersParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
+};
+
+export type GetPurchasingPurchaseOrdersParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
+};
+
 export type GetInventoryStockMovementsParams = {
 /**
  * @pattern ^-?(?:0|[1-9]\d*)$
@@ -386,6 +403,10 @@ warehouseId?: number | string;
  * @pattern ^-?(?:0|[1-9]\d*)$
  */
 referenceId?: number | string;
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
 };
 
 export type GetInventoryStockBalanceParams = {
@@ -397,5 +418,16 @@ productId?: number | string;
  * @pattern ^-?(?:0|[1-9]\d*)$
  */
 warehouseId?: number | string;
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
+};
+
+export type GetInventoryWarehousesParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
 };
 

@@ -25,6 +25,7 @@ import type {
 
 import type {
   CreateWarehouseRequest,
+  GetInventoryWarehousesParams,
   Warehouse
 } from '../syntraApiV1.schemas';
 
@@ -49,13 +50,14 @@ const withQueryKey = <T extends object, K>(query: T, queryKey: K): T & { queryKe
 };
 
 export const getInventoryWarehouses = (
-
+    params?: GetInventoryWarehousesParams,
  signal?: AbortSignal
 ) => {
 
 
       return customInstance<Warehouse[]>(
-      {url: `/inventory/warehouses`, method: 'GET', signal
+      {url: `/inventory/warehouses`, method: 'GET',
+        params, signal
     },
       );
     }
@@ -63,23 +65,23 @@ export const getInventoryWarehouses = (
 
 
 
-export const getGetInventoryWarehousesQueryKey = () => {
+export const getGetInventoryWarehousesQueryKey = (params?: GetInventoryWarehousesParams,) => {
     return [
-    `/inventory/warehouses`
+    `/inventory/warehouses`, ...(params ? [params] : [])
     ] as const;
     }
 
 
-export const getGetInventoryWarehousesQueryOptions = <TData = Awaited<ReturnType<typeof getInventoryWarehouses>>, TError = unknown>( options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>>, }
+export const getGetInventoryWarehousesQueryOptions = <TData = Awaited<ReturnType<typeof getInventoryWarehouses>>, TError = unknown>(params?: GetInventoryWarehousesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>>, }
 ) => {
 
 const {query: queryOptions} = options ?? {};
 
-  const queryKey =  queryOptions?.queryKey ?? getGetInventoryWarehousesQueryKey();
+  const queryKey =  queryOptions?.queryKey ?? getGetInventoryWarehousesQueryKey(params);
 
 
 
-    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInventoryWarehouses>>> = ({ signal }) => getInventoryWarehouses(signal);
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getInventoryWarehouses>>> = ({ signal }) => getInventoryWarehouses(params, signal);
 
 
 
@@ -93,7 +95,7 @@ export type GetInventoryWarehousesQueryError = unknown
 
 
 export function useGetInventoryWarehouses<TData = Awaited<ReturnType<typeof getInventoryWarehouses>>, TError = unknown>(
-  options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>> & Pick<
+ params: undefined |  GetInventoryWarehousesParams, options: { query:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>> & Pick<
         DefinedInitialDataOptions<
           Awaited<ReturnType<typeof getInventoryWarehouses>>,
           TError,
@@ -103,7 +105,7 @@ export function useGetInventoryWarehouses<TData = Awaited<ReturnType<typeof getI
  , queryClient?: QueryClient
   ):  DefinedUseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetInventoryWarehouses<TData = Awaited<ReturnType<typeof getInventoryWarehouses>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>> & Pick<
+ params?: GetInventoryWarehousesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>> & Pick<
         UndefinedInitialDataOptions<
           Awaited<ReturnType<typeof getInventoryWarehouses>>,
           TError,
@@ -113,16 +115,16 @@ export function useGetInventoryWarehouses<TData = Awaited<ReturnType<typeof getI
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 export function useGetInventoryWarehouses<TData = Awaited<ReturnType<typeof getInventoryWarehouses>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>>, }
+ params?: GetInventoryWarehousesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>>, }
  , queryClient?: QueryClient
   ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> }
 
 export function useGetInventoryWarehouses<TData = Awaited<ReturnType<typeof getInventoryWarehouses>>, TError = unknown>(
-  options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>>, }
+ params?: GetInventoryWarehousesParams, options?: { query?:Partial<UseQueryOptions<Awaited<ReturnType<typeof getInventoryWarehouses>>, TError, TData>>, }
  , queryClient?: QueryClient
  ):  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> } {
 
-  const queryOptions = getGetInventoryWarehousesQueryOptions(options)
+  const queryOptions = getGetInventoryWarehousesQueryOptions(params,options)
 
   const query = useQuery(queryOptions, queryClient) as  UseQueryResult<TData, TError> & { queryKey: DataTag<QueryKey, TData, TError> };
 

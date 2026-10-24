@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Syntra.Api.Auth;
 using Syntra.Domain.Inventory;
 using Syntra.Domain.Purchasing;
 using Syntra.Infrastructure.TenantData;
@@ -44,16 +45,23 @@ public class CreatePurchaseOrderRequestValidator : AbstractValidator<CreatePurch
 public class PurchaseOrdersController : ControllerBase
 {
     private readonly TenantDbContext _tenantDb;
+    private readonly ICurrentUserAccess _userAccess;
+    private readonly IBranchScope _branchScope;
 
-    public PurchaseOrdersController(TenantDbContext tenantDb)
+    public PurchaseOrdersController(TenantDbContext tenantDb, ICurrentUserAccess userAccess, IBranchScope branchScope)
     {
         _tenantDb = tenantDb;
+        _userAccess = userAccess;
+        _branchScope = branchScope;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<PurchaseOrder>>> List()
+    public async Task<ActionResult<IEnumerable<PurchaseOrder>>> List([FromQuery] int? branchId)
     {
+        var access = await _userAccess.GetAsync();
+
         var orders = await _tenantDb.PurchaseOrders.AsNoTracking()
+            .VisibleTo(access, branchId)
             .Include(o => o.Supplier)
             .Include(o => o.Warehouse)
             .ToListAsync();
@@ -64,7 +72,10 @@ public class PurchaseOrdersController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<PurchaseOrder>> Get(int id)
     {
+        var access = await _userAccess.GetAsync();
+
         var order = await _tenantDb.PurchaseOrders.AsNoTracking()
+            .VisibleTo(access)
             .Include(o => o.Supplier)
             .Include(o => o.Warehouse)
             .Include(o => o.Lines).ThenInclude(l => l.Product)
@@ -83,10 +94,10 @@ public class PurchaseOrdersController : ControllerBase
             return ValidationProblem($"Supplier {request.SupplierId} does not exist.");
         }
 
-        var warehouseExists = await _tenantDb.Warehouses.AnyAsync(w => w.WarehouseId == request.WarehouseId);
-        if (!warehouseExists)
+        var (warehouse, warehouseError) = await _branchScope.ResolveWarehouseForNewActivityAsync(request.WarehouseId);
+        if (warehouse is null)
         {
-            return ValidationProblem($"Warehouse {request.WarehouseId} does not exist.");
+            return ValidationProblem(warehouseError!);
         }
 
         var lines = new List<PurchaseOrderLine>();
@@ -146,7 +157,8 @@ public class PurchaseOrdersController : ControllerBase
     [HttpPost("{id:int}/confirm")]
     public async Task<ActionResult<PurchaseOrder>> Confirm(int id)
     {
-        var order = await _tenantDb.PurchaseOrders.FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
+        var access = await _userAccess.GetAsync();
+        var order = await _tenantDb.PurchaseOrders.VisibleTo(access).FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
         if (order is null)
         {
             return NotFound();
@@ -166,7 +178,10 @@ public class PurchaseOrdersController : ControllerBase
     [HttpPost("{id:int}/receive")]
     public async Task<ActionResult<PurchaseOrder>> Receive(int id)
     {
+        var access = await _userAccess.GetAsync();
+
         var order = await _tenantDb.PurchaseOrders
+            .VisibleTo(access)
             .Include(o => o.Lines)
             .FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
 
@@ -215,7 +230,8 @@ public class PurchaseOrdersController : ControllerBase
     [HttpPost("{id:int}/cancel")]
     public async Task<ActionResult<PurchaseOrder>> Cancel(int id)
     {
-        var order = await _tenantDb.PurchaseOrders.FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
+        var access = await _userAccess.GetAsync();
+        var order = await _tenantDb.PurchaseOrders.VisibleTo(access).FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
         if (order is null)
         {
             return NotFound();

@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Syntra.Api.Auth;
 using Syntra.Domain.Inventory;
 using Syntra.Infrastructure.TenantData;
 
@@ -24,28 +25,43 @@ public class CreateWarehouseRequestValidator : AbstractValidator<CreateWarehouse
 public class WarehousesController : ControllerBase
 {
     private readonly TenantDbContext _tenantDb;
+    private readonly ICurrentUserAccess _userAccess;
 
-    public WarehousesController(TenantDbContext tenantDb)
+    public WarehousesController(TenantDbContext tenantDb, ICurrentUserAccess userAccess)
     {
         _tenantDb = tenantDb;
+        _userAccess = userAccess;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<Warehouse>>> List()
+    public async Task<ActionResult<IEnumerable<Warehouse>>> List([FromQuery] int? branchId)
     {
-        var warehouses = await _tenantDb.Warehouses.AsNoTracking().Include(w => w.Branch).ToListAsync();
+        var access = await _userAccess.GetAsync();
+
+        var warehouses = await _tenantDb.Warehouses.AsNoTracking()
+            .VisibleTo(access, branchId)
+            .Include(w => w.Branch)
+            .ToListAsync();
+
         return Ok(warehouses);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Warehouse>> Get(int id)
     {
-        var warehouse = await _tenantDb.Warehouses.AsNoTracking().Include(w => w.Branch)
+        var access = await _userAccess.GetAsync();
+
+        var warehouse = await _tenantDb.Warehouses.AsNoTracking()
+            .VisibleTo(access)
+            .Include(w => w.Branch)
             .FirstOrDefaultAsync(w => w.WarehouseId == id);
+
         return warehouse is null ? NotFound() : Ok(warehouse);
     }
 
+    // Warehouses are structural setup (like branches), so admin only.
     [HttpPost]
+    [Authorize(Policy = AuthPolicies.TenantAdmin)]
     public async Task<ActionResult<Warehouse>> Create(CreateWarehouseRequest request)
     {
         var branch = await _tenantDb.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.BranchId == request.BranchId);

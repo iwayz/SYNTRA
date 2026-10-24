@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Syntra.Api.Auth;
 using Syntra.Domain.Inventory;
 using Syntra.Domain.Sales;
 using Syntra.Infrastructure.TenantData;
@@ -44,16 +45,23 @@ public class CreateSalesOrderRequestValidator : AbstractValidator<CreateSalesOrd
 public class SalesOrdersController : ControllerBase
 {
     private readonly TenantDbContext _tenantDb;
+    private readonly ICurrentUserAccess _userAccess;
+    private readonly IBranchScope _branchScope;
 
-    public SalesOrdersController(TenantDbContext tenantDb)
+    public SalesOrdersController(TenantDbContext tenantDb, ICurrentUserAccess userAccess, IBranchScope branchScope)
     {
         _tenantDb = tenantDb;
+        _userAccess = userAccess;
+        _branchScope = branchScope;
     }
 
     [HttpGet]
-    public async Task<ActionResult<IEnumerable<SalesOrder>>> List()
+    public async Task<ActionResult<IEnumerable<SalesOrder>>> List([FromQuery] int? branchId)
     {
+        var access = await _userAccess.GetAsync();
+
         var orders = await _tenantDb.SalesOrders.AsNoTracking()
+            .VisibleTo(access, branchId)
             .Include(o => o.Customer)
             .Include(o => o.Warehouse)
             .ToListAsync();
@@ -64,7 +72,10 @@ public class SalesOrdersController : ControllerBase
     [HttpGet("{id:int}")]
     public async Task<ActionResult<SalesOrder>> Get(int id)
     {
+        var access = await _userAccess.GetAsync();
+
         var order = await _tenantDb.SalesOrders.AsNoTracking()
+            .VisibleTo(access)
             .Include(o => o.Customer)
             .Include(o => o.Warehouse)
             .Include(o => o.Lines).ThenInclude(l => l.Product)
@@ -83,10 +94,10 @@ public class SalesOrdersController : ControllerBase
             return ValidationProblem($"Customer {request.CustomerId} does not exist.");
         }
 
-        var warehouseExists = await _tenantDb.Warehouses.AnyAsync(w => w.WarehouseId == request.WarehouseId);
-        if (!warehouseExists)
+        var (warehouse, warehouseError) = await _branchScope.ResolveWarehouseForNewActivityAsync(request.WarehouseId);
+        if (warehouse is null)
         {
-            return ValidationProblem($"Warehouse {request.WarehouseId} does not exist.");
+            return ValidationProblem(warehouseError!);
         }
 
         var lines = new List<SalesOrderLine>();
@@ -146,7 +157,10 @@ public class SalesOrdersController : ControllerBase
     [HttpPost("{id:int}/confirm")]
     public async Task<ActionResult<SalesOrder>> Confirm(int id)
     {
+        var access = await _userAccess.GetAsync();
+
         var order = await _tenantDb.SalesOrders
+            .VisibleTo(access)
             .Include(o => o.Lines)
             .FirstOrDefaultAsync(o => o.SalesOrderId == id);
 
@@ -231,7 +245,8 @@ public class SalesOrdersController : ControllerBase
     [HttpPost("{id:int}/cancel")]
     public async Task<ActionResult<SalesOrder>> Cancel(int id)
     {
-        var order = await _tenantDb.SalesOrders.FirstOrDefaultAsync(o => o.SalesOrderId == id);
+        var access = await _userAccess.GetAsync();
+        var order = await _tenantDb.SalesOrders.VisibleTo(access).FirstOrDefaultAsync(o => o.SalesOrderId == id);
         if (order is null)
         {
             return NotFound();

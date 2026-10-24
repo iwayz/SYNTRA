@@ -63,6 +63,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccess, CurrentUserAccess>();
+builder.Services.AddScoped<IBranchScope, BranchScope>();
 builder.Services.AddScoped<IAuthorizationHandler, TenantAdminHandler>();
 
 builder.Services.AddAuthorization(options =>

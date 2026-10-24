@@ -36,23 +36,28 @@ public class UpdateBranchRequestValidator : AbstractValidator<UpdateBranchReques
 public class BranchesController : ControllerBase
 {
     private readonly TenantDbContext _tenantDb;
+    private readonly ICurrentUserAccess _userAccess;
 
-    public BranchesController(TenantDbContext tenantDb)
+    public BranchesController(TenantDbContext tenantDb, ICurrentUserAccess userAccess)
     {
         _tenantDb = tenantDb;
+        _userAccess = userAccess;
     }
 
+    // Non-admins only see the branches they are assigned to.
     [HttpGet]
     public async Task<ActionResult<IEnumerable<Branch>>> List()
     {
-        var branches = await _tenantDb.Branches.AsNoTracking().OrderBy(b => b.Name).ToListAsync();
+        var access = await _userAccess.GetAsync();
+        var branches = await _tenantDb.Branches.AsNoTracking().VisibleTo(access).OrderBy(b => b.Name).ToListAsync();
         return Ok(branches);
     }
 
     [HttpGet("{id:int}")]
     public async Task<ActionResult<Branch>> Get(int id)
     {
-        var branch = await _tenantDb.Branches.AsNoTracking().FirstOrDefaultAsync(b => b.BranchId == id);
+        var access = await _userAccess.GetAsync();
+        var branch = await _tenantDb.Branches.AsNoTracking().VisibleTo(access).FirstOrDefaultAsync(b => b.BranchId == id);
         return branch is null ? NotFound() : Ok(branch);
     }
 

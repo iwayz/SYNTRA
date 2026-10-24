@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Syntra.Api.Auth;
 using Syntra.Domain.Inventory;
 using Syntra.Infrastructure.TenantData;
 
@@ -26,6 +27,8 @@ public record StockBalance(
     string ProductName,
     int WarehouseId,
     string WarehouseName,
+    int BranchId,
+    string BranchName,
     decimal QuantityOnHand);
 
 [ApiController]
@@ -34,19 +37,27 @@ public record StockBalance(
 public class StockController : ControllerBase
 {
     private readonly TenantDbContext _tenantDb;
+    private readonly ICurrentUserAccess _userAccess;
+    private readonly IBranchScope _branchScope;
 
-    public StockController(TenantDbContext tenantDb)
+    public StockController(TenantDbContext tenantDb, ICurrentUserAccess userAccess, IBranchScope branchScope)
     {
         _tenantDb = tenantDb;
+        _userAccess = userAccess;
+        _branchScope = branchScope;
     }
 
     [HttpGet("stock-movements")]
     public async Task<ActionResult<IEnumerable<StockMovement>>> ListMovements(
         [FromQuery] int? productId,
         [FromQuery] int? warehouseId,
-        [FromQuery] int? referenceId)
+        [FromQuery] int? referenceId,
+        [FromQuery] int? branchId)
     {
+        var access = await _userAccess.GetAsync();
+
         var query = _tenantDb.StockMovements.AsNoTracking()
+            .VisibleTo(access, branchId)
             .Include(m => m.Product)
             .Include(m => m.Warehouse)
             .AsQueryable();
@@ -71,9 +82,13 @@ public class StockController : ControllerBase
     }
 
     [HttpGet("stock-balance")]
-    public async Task<ActionResult<IEnumerable<StockBalance>>> GetBalance([FromQuery] int? productId, [FromQuery] int? warehouseId)
+    public async Task<ActionResult<IEnumerable<StockBalance>>> GetBalance(
+        [FromQuery] int? productId,
+        [FromQuery] int? warehouseId,
+        [FromQuery] int? branchId)
     {
-        var query = _tenantDb.StockMovements.AsNoTracking();
+        var access = await _userAccess.GetAsync();
+        var query = _tenantDb.StockMovements.AsNoTracking().VisibleTo(access, branchId);
 
         if (productId is not null)
         {
@@ -98,6 +113,7 @@ public class StockController : ControllerBase
             .ToDictionaryAsync(p => p.ProductId);
 
         var warehouses = await _tenantDb.Warehouses.AsNoTracking()
+            .Include(w => w.Branch)
             .Where(w => warehouseIds.Contains(w.WarehouseId))
             .ToDictionaryAsync(w => w.WarehouseId);
 
@@ -107,6 +123,8 @@ public class StockController : ControllerBase
             products[b.ProductId].Name,
             b.WarehouseId,
             warehouses[b.WarehouseId].Name,
+            warehouses[b.WarehouseId].BranchId,
+            warehouses[b.WarehouseId].Branch!.Name,
             b.Quantity)).ToList();
 
         return Ok(balances);
@@ -121,10 +139,10 @@ public class StockController : ControllerBase
             return ValidationProblem($"Product {request.ProductId} does not exist.");
         }
 
-        var warehouseExists = await _tenantDb.Warehouses.AnyAsync(w => w.WarehouseId == request.WarehouseId);
-        if (!warehouseExists)
+        var (warehouse, warehouseError) = await _branchScope.ResolveWarehouseForNewActivityAsync(request.WarehouseId);
+        if (warehouse is null)
         {
-            return ValidationProblem($"Warehouse {request.WarehouseId} does not exist.");
+            return ValidationProblem(warehouseError!);
         }
 
         var movement = new StockMovement
