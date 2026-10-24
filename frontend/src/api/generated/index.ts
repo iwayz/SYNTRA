@@ -1,4 +1,5 @@
 export * from './auth/auth';
+export * from './branches/branches';
 export * from './customers/customers';
 export * from './products/products';
 export * from './purchase-orders/purchase-orders';

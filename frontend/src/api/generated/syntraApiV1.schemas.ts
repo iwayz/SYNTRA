@@ -4,6 +4,19 @@
  * Syntra.Api | v1
  * OpenAPI spec version: 1.0.0
  */
+export interface Branch {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  branchId?: number | string;
+  code?: string;
+  name?: string;
+  isActive?: boolean;
+}
+
+export interface CreateBranchRequest {
+  code: string;
+  name: string;
+}
+
 export interface CreateCustomerRequest {
   name: string;
 }
@@ -83,6 +96,8 @@ export interface CreateUnitOfMeasureRequest {
 
 export interface CreateWarehouseRequest {
   name: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  branchId: number | string;
 }
 
 export interface Customer {
@@ -177,6 +192,9 @@ export interface Warehouse {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   warehouseId?: number | string;
   name?: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  branchId?: number | string;
+  branch?: null | Branch;
 }
 
 export type PurchaseOrderStatus = typeof PurchaseOrderStatus[keyof typeof PurchaseOrderStatus];
@@ -294,6 +312,12 @@ export interface StockMovement {
   occurredAt?: string;
   /** @nullable */
   notes?: string | null;
+}
+
+export interface UpdateBranchRequest {
+  code: string;
+  name: string;
+  isActive: boolean;
 }
 
 export interface WeatherForecast {

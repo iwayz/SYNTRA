@@ -255,11 +255,16 @@ namespace Syntra.Infrastructure.TenantData.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("WarehouseId"));
 
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("WarehouseId");
+
+                    b.HasIndex("BranchId");
 
                     b.ToTable("Warehouses");
                 });
@@ -430,6 +435,44 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.HasIndex("UnitOfMeasureId");
 
                     b.ToTable("SalesOrderLines");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Tenancy.Branch", b =>
+                {
+                    b.Property<int>("BranchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BranchId"));
+
+                    b.Property<string>("Code")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.HasKey("BranchId");
+
+                    b.HasIndex("Code")
+                        .IsUnique();
+
+                    b.ToTable("Branches");
+
+                    b.HasData(
+                        new
+                        {
+                            BranchId = 1,
+                            Code = "MAIN",
+                            IsActive = true,
+                            Name = "Main"
+                        });
                 });
 
             modelBuilder.Entity("Syntra.Domain.TenantData.SchemaProbe", b =>
@@ -653,6 +696,17 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.Warehouse", b =>
+                {
+                    b.HasOne("Syntra.Domain.Tenancy.Branch", "Branch")
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Branch");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseOrder", b =>

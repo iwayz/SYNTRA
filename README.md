@@ -22,7 +22,7 @@ backend/
     Syntra.MigrationRunner/    Fans out tenant-schema migrations across every tenant database
     Syntra.TenantProvisioner/  Provisions a new tenant end-to-end (database, schema, admin user)
   tests/
-    Syntra.Tests/              Tenant isolation integration tests
+    Syntra.Tests/              Tenant isolation and branch integration tests
 frontend/
   src/
     api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
@@ -66,4 +66,9 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 - [x] FE-1d — purchase order screens: list, create (dynamic lines), detail with status-based actions (confirm/receive/cancel)
 - [x] FE-1e — sales order screens: list, create (dynamic lines), detail; confirm surfaces the backend oversell message
 
-Next: Phase 2 (backend) — real multi-tenant + multi-branch.
+**Phase 2 (multi-branch + tenant data isolation) — in progress.** A branch owns one or more warehouses; admins see every branch, other users only their assigned ones.
+- [x] 2a — `Branch` entity, `Warehouse.BranchId`, default "Main" branch seeded by the `AddBranches` migration (existing warehouses are backfilled into it), branch CRUD at `/tenancy/branches`; the Warehouses screen got a minimal branch picker
+- [ ] 2b — user-to-branch assignment, minimal user-management API
+- [ ] 2c — branch scoping on warehouses, stock and orders; all-branches view for admins
+- [ ] 2d — business-data isolation tests across two tenants, plus branch-scoping tests
+- [ ] 2e — frontend: branch management, branch filter, user assignment

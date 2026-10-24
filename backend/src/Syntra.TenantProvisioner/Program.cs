@@ -71,14 +71,16 @@ try
     await LogStepAsync(platformDb, tenant.TenantId, "MigrationsApplied", OnboardingStepStatus.Success, null);
     Console.WriteLine("  Database created and migrated.");
 
-    // Step 3: seed reference data. No-op - Phase 1 hasn't defined master data yet.
+    // Step 3: seed reference data. The default "Main" branch and the Admin
+    // role are seeded by the migrations themselves (HasData), so every tenant
+    // database gets identical rows; there is nothing to insert here yet.
     await LogStepAsync(
         platformDb,
         tenant.TenantId,
         "SeedDataLoaded",
         OnboardingStepStatus.Success,
-        "No-op: no reference/master data defined yet (Phase 1 not started).");
-    Console.WriteLine("  Seed reference data: skipped (nothing defined yet).");
+        "Default branch 'Main' seeded by the AddBranches migration; no further reference data.");
+    Console.WriteLine("  Seed reference data: default 'Main' branch comes from the migration.");
 
     // Step 4: create the admin user. Direct insert rather than UserManager,
     // since this console app has no Identity DI stack - PasswordHasher is the

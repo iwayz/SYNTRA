@@ -4,6 +4,7 @@ using Syntra.Domain.Inventory;
 using Syntra.Domain.Purchasing;
 using Syntra.Domain.Sales;
 using Syntra.Domain.TenantData;
+using Syntra.Domain.Tenancy;
 
 namespace Syntra.Infrastructure.TenantData;
 
@@ -22,6 +23,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductUnitConversion> ProductUnitConversions => Set<ProductUnitConversion>();
+    public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
@@ -41,6 +43,28 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
             Name = TenantRoles.AdminRoleName,
             NormalizedName = TenantRoles.AdminRoleName.ToUpperInvariant(),
             ConcurrencyStamp = "8f14e45f-ceea-467e-9b1a-4c1f3d3d7e01"
+        });
+
+        modelBuilder.Entity<Branch>(e =>
+        {
+            e.HasIndex(b => b.Code).IsUnique();
+            e.Property(b => b.Code).HasMaxLength(20);
+            e.Property(b => b.Name).HasMaxLength(200);
+            e.HasData(new Branch
+            {
+                BranchId = Branch.MainBranchId,
+                Code = Branch.MainBranchCode,
+                Name = Branch.MainBranchName,
+                IsActive = true
+            });
+        });
+
+        modelBuilder.Entity<Warehouse>(e =>
+        {
+            e.HasOne(w => w.Branch)
+                .WithMany()
+                .HasForeignKey(w => w.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<UnitOfMeasure>(e =>
