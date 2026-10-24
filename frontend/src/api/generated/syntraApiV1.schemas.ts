@@ -12,6 +12,11 @@ export interface Branch {
   isActive?: boolean;
 }
 
+export interface ChangePasswordRequest {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface CreateBranchRequest {
   code: string;
   name: string;
@@ -94,6 +99,14 @@ export interface CreateUnitOfMeasureRequest {
   name: string;
 }
 
+export interface CreateUserRequest {
+  email: string;
+  password: string;
+  isAdmin: boolean;
+  /** @items.pattern ^-?(?:0|[1-9]\d*)$ */
+  branchIds: (number | string)[];
+}
+
 export interface CreateWarehouseRequest {
   name: string;
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
@@ -124,6 +137,9 @@ export interface MeResponse {
   /** @nullable */
   email: string | null;
   roles: string[];
+  isAdmin: boolean;
+  /** @items.pattern ^-?(?:0|[1-9]\d*)$ */
+  branchIds: (number | string)[];
 }
 
 export type MovementType = typeof MovementType[keyof typeof MovementType];
@@ -239,6 +255,10 @@ export interface PurchaseOrder {
   lines?: PurchaseOrderLine[];
 }
 
+export interface ResetUserPasswordRequest {
+  newPassword: string;
+}
+
 export type SalesOrderStatus = typeof SalesOrderStatus[keyof typeof SalesOrderStatus];
 
 
@@ -280,6 +300,19 @@ export interface SalesOrder {
   lines?: SalesOrderLine[];
 }
 
+export interface SetUserActiveRequest {
+  isActive: boolean;
+}
+
+export interface SetUserAdminRequest {
+  isAdmin: boolean;
+}
+
+export interface SetUserBranchesRequest {
+  /** @items.pattern ^-?(?:0|[1-9]\d*)$ */
+  branchIds: (number | string)[];
+}
+
 export interface StockBalance {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   productId: number | string;
@@ -318,6 +351,16 @@ export interface UpdateBranchRequest {
   code: string;
   name: string;
   isActive: boolean;
+}
+
+export interface UserSummary {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  userId: number | string;
+  email: string;
+  isActive: boolean;
+  isAdmin: boolean;
+  /** @items.pattern ^-?(?:0|[1-9]\d*)$ */
+  branchIds: (number | string)[];
 }
 
 export interface WeatherForecast {

@@ -68,7 +68,7 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 
 **Phase 2 (multi-branch + tenant data isolation) — in progress.** A branch owns one or more warehouses; admins see every branch, other users only their assigned ones.
 - [x] 2a — `Branch` entity, `Warehouse.BranchId`, default "Main" branch seeded by the `AddBranches` migration (existing warehouses are backfilled into it), branch CRUD at `/tenancy/branches`; the Warehouses screen got a minimal branch picker
-- [ ] 2b — user-to-branch assignment, minimal user-management API
+- [x] 2b — user-to-branch assignment (`UserBranches`), admin-only user API at `/tenancy/users` (create, activate/deactivate, promote/demote, set branches, reset password), `POST /auth/change-password`; admin status, active flag and branches are read from the database on every request, not from the JWT. Assignments are stored but not yet enforced on stock/orders (that is 2c)
 - [ ] 2c — branch scoping on warehouses, stock and orders; all-branches view for admins
 - [ ] 2d — business-data isolation tests across two tenants, plus branch-scoping tests
 - [ ] 2e — frontend: branch management, branch filter, user assignment

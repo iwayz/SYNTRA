@@ -24,6 +24,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<Product> Products => Set<Product>();
     public DbSet<ProductUnitConversion> ProductUnitConversions => Set<ProductUnitConversion>();
     public DbSet<Branch> Branches => Set<Branch>();
+    public DbSet<UserBranch> UserBranches => Set<UserBranch>();
     public DbSet<Warehouse> Warehouses => Set<Warehouse>();
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
@@ -57,6 +58,19 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
                 Name = Branch.MainBranchName,
                 IsActive = true
             });
+        });
+
+        modelBuilder.Entity<UserBranch>(e =>
+        {
+            e.HasKey(ub => new { ub.UserId, ub.BranchId });
+            e.HasOne<TenantUser>()
+                .WithMany()
+                .HasForeignKey(ub => ub.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+            e.HasOne<Branch>()
+                .WithMany()
+                .HasForeignKey(ub => ub.BranchId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<Warehouse>(e =>

@@ -475,6 +475,21 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         });
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Tenancy.UserBranch", b =>
+                {
+                    b.Property<int>("UserId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("int");
+
+                    b.HasKey("UserId", "BranchId");
+
+                    b.HasIndex("BranchId");
+
+                    b.ToTable("UserBranches");
+                });
+
             modelBuilder.Entity("Syntra.Domain.TenantData.SchemaProbe", b =>
                 {
                     b.Property<int>("SchemaProbeId")
@@ -550,6 +565,9 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.Property<bool>("EmailConfirmed")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
                     b.Property<bool>("LockoutEnabled")
@@ -799,6 +817,21 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("SalesOrder");
 
                     b.Navigation("UnitOfMeasure");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Tenancy.UserBranch", b =>
+                {
+                    b.HasOne("Syntra.Domain.Tenancy.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.TenantData.TenantUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Syntra.Domain.Inventory.Product", b =>

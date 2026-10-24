@@ -1,6 +1,7 @@
 using System.Text;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -60,7 +61,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-builder.Services.AddAuthorization();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserAccess, CurrentUserAccess>();
+builder.Services.AddScoped<IAuthorizationHandler, TenantAdminHandler>();
+
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy(AuthPolicies.TenantAdmin, policy => policy.AddRequirements(new TenantAdminRequirement())));
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -96,6 +102,8 @@ app.UseMiddleware<TenantResolutionMiddleware>();
 app.UseAuthentication();
 
 app.UseMiddleware<TenantClaimGuardMiddleware>();
+
+app.UseMiddleware<ActiveUserMiddleware>();
 
 app.UseAuthorization();
 

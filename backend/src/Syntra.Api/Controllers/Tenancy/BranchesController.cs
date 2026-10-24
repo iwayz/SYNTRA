@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Syntra.Api.Auth;
 using Syntra.Domain.Tenancy;
 using Syntra.Infrastructure.TenantData;
 
@@ -56,6 +57,7 @@ public class BranchesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = AuthPolicies.TenantAdmin)]
     public async Task<ActionResult<Branch>> Create(CreateBranchRequest request)
     {
         var branch = new Branch { Code = request.Code.Trim().ToUpperInvariant(), Name = request.Name.Trim() };
@@ -67,6 +69,7 @@ public class BranchesController : ControllerBase
     }
 
     [HttpPut("{id:int}")]
+    [Authorize(Policy = AuthPolicies.TenantAdmin)]
     public async Task<ActionResult<Branch>> Update(int id, UpdateBranchRequest request)
     {
         var branch = await _tenantDb.Branches.FirstOrDefaultAsync(b => b.BranchId == id);

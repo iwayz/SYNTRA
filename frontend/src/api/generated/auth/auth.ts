@@ -24,6 +24,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  ChangePasswordRequest,
   LoginRequest,
   LoginResponse,
   MeResponse,
@@ -197,3 +198,64 @@ export function useGetAuthMe<TData = Awaited<ReturnType<typeof getAuthMe>>, TErr
 
 
 
+export const postAuthChangePassword = (
+    changePasswordRequest: ChangePasswordRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<void>(
+      {url: `/auth/change-password`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: changePasswordRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getPostAuthChangePasswordMutationKey = () => ['postAuthChangePassword'] as const;
+
+export const getPostAuthChangePasswordMutationOptions = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthChangePassword>>, TError,PostAuthChangePasswordMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postAuthChangePassword>>, TError,PostAuthChangePasswordMutationVariables, TContext> => {
+
+const mutationKey = getPostAuthChangePasswordMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postAuthChangePassword>>, PostAuthChangePasswordMutationVariables> = (props) => {
+          const {data} = props ?? {};
+
+          return  postAuthChangePassword(data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostAuthChangePasswordMutationResult = NonNullable<Awaited<ReturnType<typeof postAuthChangePassword>>>
+    export type PostAuthChangePasswordMutationBody = ChangePasswordRequest
+    export type PostAuthChangePasswordMutationError = ProblemDetails
+    export type PostAuthChangePasswordMutationVariables = {data: ChangePasswordRequest}
+
+    export const usePostAuthChangePassword = <TError = ProblemDetails,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postAuthChangePassword>>, TError,PostAuthChangePasswordMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postAuthChangePassword>>,
+        TError,
+        PostAuthChangePasswordMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostAuthChangePasswordMutationOptions(options), queryClient);
+    }
