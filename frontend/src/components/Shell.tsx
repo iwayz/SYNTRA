@@ -19,10 +19,10 @@ export function Shell() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
-        <div className="flex items-center gap-6">
+      <header className="flex flex-wrap items-center justify-between gap-y-2 border-b border-slate-200 bg-white px-6 py-3">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
           <span className="text-lg font-semibold text-slate-900">Syntra</span>
-          <nav className="flex gap-1">
+          <nav className="flex flex-wrap gap-1">
             <NavLink to="/" end className={navLinkClasses}>
               Dashboard
             </NavLink>
@@ -47,7 +47,10 @@ export function Shell() {
             <NavLink to="/stock-movements" className={navLinkClasses}>
               Stock Movements
             </NavLink>
-            {/* Purchasing/Sales links are added in FE-1d+ once those pages exist */}
+            <NavLink to="/purchase-orders" className={navLinkClasses}>
+              Purchase Orders
+            </NavLink>
+            {/* Sales order links are added in FE-1e once those pages exist */}
           </nav>
         </div>
         <div className="flex items-center gap-4">
