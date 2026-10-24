@@ -1,5 +1,7 @@
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import { clearToken } from "../auth/token";
+import { BranchProvider, useBranch } from "../branch/BranchContext";
+import { BranchSwitcher } from "../branch/BranchSwitcher";
 import { useCurrentUser } from "../auth/useCurrentUser";
 
 function navLinkClasses({ isActive }: { isActive: boolean }) {
@@ -8,9 +10,10 @@ function navLinkClasses({ isActive }: { isActive: boolean }) {
   }`;
 }
 
-export function Shell() {
+function ShellLayout() {
   const navigate = useNavigate();
   const { isLoaded, email, isAdmin, branchIds } = useCurrentUser();
+  const { ready } = useBranch();
 
   function handleLogout() {
     clearToken();
@@ -66,6 +69,7 @@ export function Shell() {
           </nav>
         </div>
         <div className="flex items-center gap-4">
+          <BranchSwitcher />
           {email && (
             <NavLink to="/account" className="text-sm text-slate-500 hover:text-indigo-700 hover:underline">
               {email}
@@ -85,8 +89,16 @@ export function Shell() {
         </div>
       )}
       <main className="p-6">
-        <Outlet />
+        {ready ? <Outlet /> : <p className="text-slate-500">Loading...</p>}
       </main>
     </div>
+  );
+}
+
+export function Shell() {
+  return (
+    <BranchProvider>
+      <ShellLayout />
+    </BranchProvider>
   );
 }

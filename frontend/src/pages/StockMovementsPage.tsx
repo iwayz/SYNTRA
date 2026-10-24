@@ -1,5 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { errorMessage } from "../api/errors";
 import {
   getGetInventoryStockBalanceQueryKey,
   getGetInventoryStockMovementsQueryKey,
@@ -8,11 +9,13 @@ import {
 } from "../api/generated/stock/stock";
 import { useGetInventoryProducts } from "../api/generated/products/products";
 import { useGetInventoryWarehouses } from "../api/generated/warehouses/warehouses";
+import { useBranch } from "../branch/BranchContext";
 
 export function StockMovementsPage() {
   const queryClient = useQueryClient();
   const productsQuery = useGetInventoryProducts();
-  const warehousesQuery = useGetInventoryWarehouses();
+  const { branchId, branchName } = useBranch();
+  const warehousesQuery = useGetInventoryWarehouses({ branchId });
 
   const [filterProductId, setFilterProductId] = useState("");
   const [filterWarehouseId, setFilterWarehouseId] = useState("");
@@ -20,12 +23,19 @@ export function StockMovementsPage() {
   const movementsQuery = useGetInventoryStockMovements({
     productId: filterProductId ? Number(filterProductId) : undefined,
     warehouseId: filterWarehouseId ? Number(filterWarehouseId) : undefined,
+    branchId,
   });
 
   const [productId, setProductId] = useState("");
   const [warehouseId, setWarehouseId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
+
+  // Warehouses shown depend on the header's branch, so a previously picked one may no longer exist.
+  useEffect(() => {
+    setFilterWarehouseId("");
+    setWarehouseId("");
+  }, [branchId]);
 
   const createMutation = usePostInventoryStockAdjustments({
     mutation: {
@@ -89,6 +99,7 @@ export function StockMovementsPage() {
             <tr className="border-b border-slate-200 text-slate-500">
               <th className="pb-2 pr-4 font-medium">Date</th>
               <th className="pb-2 pr-4 font-medium">Product</th>
+              <th className="pb-2 pr-4 font-medium">Branch</th>
               <th className="pb-2 pr-4 font-medium">Warehouse</th>
               <th className="pb-2 pr-4 font-medium">Type</th>
               <th className="pb-2 pr-4 text-right font-medium">Quantity</th>
@@ -102,6 +113,7 @@ export function StockMovementsPage() {
                   {movement.occurredAt && new Date(movement.occurredAt).toLocaleString()}
                 </td>
                 <td className="py-2 pr-4 text-slate-700">{movement.product?.name}</td>
+                <td className="py-2 pr-4 text-slate-700">{branchName(movement.warehouse?.branchId)}</td>
                 <td className="py-2 pr-4 text-slate-700">{movement.warehouse?.name}</td>
                 <td className="py-2 pr-4 text-slate-700">{movement.movementType}</td>
                 <td
@@ -116,7 +128,7 @@ export function StockMovementsPage() {
             ))}
             {movementsQuery.data?.length === 0 && (
               <tr>
-                <td colSpan={6} className="py-4 text-slate-400">
+                <td colSpan={7} className="py-4 text-slate-400">
                   No movements match these filters.
                 </td>
               </tr>
@@ -157,11 +169,15 @@ export function StockMovementsPage() {
               <option value="" disabled>
                 Select...
               </option>
-              {warehousesQuery.data?.map((warehouse) => (
-                <option key={warehouse.warehouseId} value={warehouse.warehouseId}>
-                  {warehouse.name}
-                </option>
-              ))}
+              {warehousesQuery.data?.map((warehouse) => {
+                const branchInactive = warehouse.branch?.isActive === false;
+                return (
+                  <option key={warehouse.warehouseId} value={warehouse.warehouseId} disabled={branchInactive}>
+                    {warehouse.name}
+                    {branchInactive ? " (inactive branch)" : ""}
+                  </option>
+                );
+              })}
             </select>
           </div>
           <div>
@@ -195,7 +211,9 @@ export function StockMovementsPage() {
           </button>
         </form>
         {createMutation.isError && (
-          <p className="mt-2 text-sm text-red-600">Could not record adjustment - check the values and try again.</p>
+          <p className="mt-2 text-sm text-red-600">
+            {errorMessage(createMutation.error, "Could not record adjustment - check the values and try again.")}
+          </p>
         )}
       </div>
     </div>

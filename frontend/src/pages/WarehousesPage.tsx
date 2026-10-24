@@ -6,10 +6,15 @@ import {
   usePostInventoryWarehouses,
 } from "../api/generated/warehouses/warehouses";
 import { useGetTenancyBranches } from "../api/generated/branches/branches";
+import { errorMessage } from "../api/errors";
+import { useCurrentUser } from "../auth/useCurrentUser";
+import { useBranch } from "../branch/BranchContext";
 
 export function WarehousesPage() {
   const queryClient = useQueryClient();
-  const warehousesQuery = useGetInventoryWarehouses();
+  const { isAdmin } = useCurrentUser();
+  const { branchId: selectedBranchId } = useBranch();
+  const warehousesQuery = useGetInventoryWarehouses({ branchId: selectedBranchId });
   const branchesQuery = useGetTenancyBranches();
   const [name, setName] = useState("");
   const [branchId, setBranchId] = useState("");
@@ -56,50 +61,54 @@ export function WarehousesPage() {
         </table>
       </div>
 
-      <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
-        <h3 className="mb-4 text-sm font-semibold text-slate-900">Add a warehouse</h3>
-        <form onSubmit={handleSubmit} className="flex items-end gap-3">
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Name</label>
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm font-medium text-slate-700">Branch</label>
-            <select
-              value={branchId}
-              onChange={(e) => setBranchId(e.target.value)}
-              required
-              className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+      {isAdmin && (
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h3 className="mb-4 text-sm font-semibold text-slate-900">Add a warehouse</h3>
+          <form onSubmit={handleSubmit} className="flex items-end gap-3">
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Name</label>
+              <input
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+            </div>
+            <div>
+              <label className="mb-1 block text-sm font-medium text-slate-700">Branch</label>
+              <select
+                value={branchId}
+                onChange={(e) => setBranchId(e.target.value)}
+                required
+                className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              >
+                <option value="" disabled>
+                  Select...
+                </option>
+                {branchesQuery.data
+                  ?.filter((branch) => branch.isActive)
+                  .map((branch) => (
+                    <option key={branch.branchId} value={branch.branchId}>
+                      {branch.name}
+                    </option>
+                  ))}
+              </select>
+            </div>
+            <button
+              type="submit"
+              disabled={createMutation.isPending}
+              className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              <option value="" disabled>
-                Select...
-              </option>
-              {branchesQuery.data
-                ?.filter((branch) => branch.isActive)
-                .map((branch) => (
-                  <option key={branch.branchId} value={branch.branchId}>
-                    {branch.name}
-                  </option>
-                ))}
-            </select>
-          </div>
-          <button
-            type="submit"
-            disabled={createMutation.isPending}
-            className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            Add
-          </button>
-        </form>
-        {createMutation.isError && (
-          <p className="mt-2 text-sm text-red-600">Could not create warehouse - check the values and try again.</p>
-        )}
-      </div>
+              Add
+            </button>
+          </form>
+          {createMutation.isError && (
+            <p className="mt-2 text-sm text-red-600">
+              {errorMessage(createMutation.error, "Could not create warehouse - check the values and try again.")}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }

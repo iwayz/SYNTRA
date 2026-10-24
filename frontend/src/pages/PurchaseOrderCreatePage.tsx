@@ -1,9 +1,12 @@
+import { useEffect } from "react";
 import { useForm, useFieldArray } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { usePostPurchasingPurchaseOrders } from "../api/generated/purchase-orders/purchase-orders";
 import { useGetInventoryProducts } from "../api/generated/products/products";
 import { useGetInventoryUnitsOfMeasure } from "../api/generated/unit-of-measures/unit-of-measures";
 import { useGetInventoryWarehouses } from "../api/generated/warehouses/warehouses";
+import { errorMessage } from "../api/errors";
+import { useBranch } from "../branch/BranchContext";
 import { useGetPurchasingSuppliers } from "../api/generated/suppliers/suppliers";
 
 type LineFormValues = {
@@ -25,11 +28,12 @@ const emptyLine: LineFormValues = { productId: "", unitOfMeasureId: "", quantity
 export function PurchaseOrderCreatePage() {
   const navigate = useNavigate();
   const suppliersQuery = useGetPurchasingSuppliers();
-  const warehousesQuery = useGetInventoryWarehouses();
+  const { branchId } = useBranch();
+  const warehousesQuery = useGetInventoryWarehouses({ branchId });
   const productsQuery = useGetInventoryProducts();
   const unitsQuery = useGetInventoryUnitsOfMeasure();
 
-  const { register, control, handleSubmit } = useForm<FormValues>({
+  const { register, control, handleSubmit, setValue } = useForm<FormValues>({
     defaultValues: {
       supplierId: "",
       warehouseId: "",
@@ -39,6 +43,11 @@ export function PurchaseOrderCreatePage() {
   });
 
   const { fields, append, remove } = useFieldArray({ control, name: "lines" });
+
+  // The warehouses offered depend on the header's branch, so a previously picked one may no longer exist.
+  useEffect(() => {
+    setValue("warehouseId", "");
+  }, [branchId, setValue]);
 
   const createMutation = usePostPurchasingPurchaseOrders({
     mutation: {
@@ -94,11 +103,15 @@ export function PurchaseOrderCreatePage() {
                 <option value="" disabled>
                   Select...
                 </option>
-                {warehousesQuery.data?.map((warehouse) => (
-                  <option key={warehouse.warehouseId} value={warehouse.warehouseId}>
-                    {warehouse.name}
-                  </option>
-                ))}
+                {warehousesQuery.data?.map((warehouse) => {
+                  const branchInactive = warehouse.branch?.isActive === false;
+                  return (
+                    <option key={warehouse.warehouseId} value={warehouse.warehouseId} disabled={branchInactive}>
+                      {warehouse.name}
+                      {branchInactive ? " (inactive branch)" : ""}
+                    </option>
+                  );
+                })}
               </select>
             </div>
             <div>
@@ -204,7 +217,9 @@ export function PurchaseOrderCreatePage() {
           Create purchase order
         </button>
         {createMutation.isError && (
-          <p className="text-sm text-red-600">Could not create the order - check the values and try again.</p>
+          <p className="text-sm text-red-600">
+            {errorMessage(createMutation.error, "Could not create the order - check the values and try again.")}
+          </p>
         )}
       </form>
     </div>

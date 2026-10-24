@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { useGetSalesSalesOrders } from "../api/generated/sales-orders/sales-orders";
+import { useBranch } from "../branch/BranchContext";
 import { StatusBadge } from "../components/StatusBadge";
 
 export function SalesOrdersPage() {
-  const ordersQuery = useGetSalesSalesOrders();
+  const { branchId, branchName } = useBranch();
+  const ordersQuery = useGetSalesSalesOrders({ branchId });
 
   return (
     <div className="space-y-6">
@@ -22,6 +24,7 @@ export function SalesOrdersPage() {
           <thead>
             <tr className="border-b border-slate-200 text-slate-500">
               <th className="pb-2 pr-4 font-medium">Customer</th>
+              <th className="pb-2 pr-4 font-medium">Branch</th>
               <th className="pb-2 pr-4 font-medium">Warehouse</th>
               <th className="pb-2 pr-4 font-medium">Order date</th>
               <th className="pb-2 pr-4 font-medium">Status</th>
@@ -32,6 +35,7 @@ export function SalesOrdersPage() {
             {ordersQuery.data?.map((order) => (
               <tr key={order.salesOrderId} className="border-b border-slate-100 last:border-0">
                 <td className="py-2 pr-4 text-slate-700">{order.customer?.name}</td>
+                <td className="py-2 pr-4 text-slate-700">{branchName(order.warehouse?.branchId)}</td>
                 <td className="py-2 pr-4 text-slate-700">{order.warehouse?.name}</td>
                 <td className="py-2 pr-4 text-slate-500">
                   {order.orderDate && new Date(order.orderDate).toLocaleDateString()}
@@ -51,7 +55,7 @@ export function SalesOrdersPage() {
             ))}
             {ordersQuery.data?.length === 0 && (
               <tr>
-                <td colSpan={5} className="py-4 text-slate-400">
+                <td colSpan={6} className="py-4 text-slate-400">
                   No sales orders yet.
                 </td>
               </tr>

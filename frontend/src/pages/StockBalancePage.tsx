@@ -1,7 +1,9 @@
 import { useGetInventoryStockBalance } from "../api/generated/stock/stock";
+import { useBranch } from "../branch/BranchContext";
 
 export function StockBalancePage() {
-  const balanceQuery = useGetInventoryStockBalance();
+  const { branchId } = useBranch();
+  const balanceQuery = useGetInventoryStockBalance({ branchId });
 
   return (
     <div className="space-y-6">
@@ -13,6 +15,7 @@ export function StockBalancePage() {
             <tr className="border-b border-slate-200 text-slate-500">
               <th className="pb-2 font-medium">SKU</th>
               <th className="pb-2 font-medium">Product</th>
+              <th className="pb-2 font-medium">Branch</th>
               <th className="pb-2 font-medium">Warehouse</th>
               <th className="pb-2 text-right font-medium">On hand</th>
             </tr>
@@ -25,13 +28,14 @@ export function StockBalancePage() {
               >
                 <td className="py-2 text-slate-700">{balance.productSku}</td>
                 <td className="py-2 text-slate-700">{balance.productName}</td>
+                <td className="py-2 text-slate-700">{balance.branchName}</td>
                 <td className="py-2 text-slate-700">{balance.warehouseName}</td>
                 <td className="py-2 text-right font-medium text-slate-900">{balance.quantityOnHand}</td>
               </tr>
             ))}
             {balanceQuery.data?.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-4 text-slate-400">
+                <td colSpan={5} className="py-4 text-slate-400">
                   No stock movements recorded yet.
                 </td>
               </tr>
