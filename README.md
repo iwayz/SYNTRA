@@ -26,9 +26,9 @@ backend/
 frontend/
   src/
     api/          Orval-generated API client (regenerate via `npm run codegen`, requires the API running) + the axios mutator
-    auth/          Token storage, route guard
+    auth/          Token storage, route guards (sign-in, admin-only), current-user hook
     components/   Shell layout
-    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements, Purchase Orders and Sales Orders (list/create/detail)
+    pages/         Login, Dashboard, Products (+ detail/unit conversions), Units of Measure, Warehouses, Customers, Suppliers, Stock Balance, Stock Movements, Purchase Orders and Sales Orders (list/create/detail), Branches (admin), Account (change password)
 ```
 
 ## Running it locally
@@ -71,4 +71,7 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 - [x] 2b — user-to-branch assignment (`UserBranches`), admin-only user API at `/tenancy/users` (create, activate/deactivate, promote/demote, set branches, reset password), `POST /auth/change-password`; admin status, active flag and branches are read from the database on every request, not from the JWT. Assignments are stored but not yet enforced on stock/orders (that is 2c)
 - [x] 2c — branch scoping: non-admins only see and act on their assigned branches (branches, warehouses, stock movements/balance, purchase and sales orders; out-of-scope items return 404, creating in another branch is refused); admins see everything; optional `branchId` filter on the lists; stock balance rows carry the branch; warehouse creation is admin-only; an inactive branch blocks new warehouses/orders/adjustments but existing orders can still be closed out
 - [x] 2d — cross-tenant business-data isolation tests (two seeded tenants with colliding ids and shared SKU/codes/email: list and by-id sweeps, per-tenant uniqueness, separate credentials, write isolation, concurrent reads/writes, direct database check, host-header spoofing) plus a second persistent demo tenant, `demo2`, to compare against `demo`. Branch-scoping tests shipped with 2c
-- [ ] 2e — frontend: branch management, branch filter, user assignment
+- [ ] 2e — frontend (in progress):
+  - [x] 2e-1 — current-user hook, admin-only nav and route guard, no-branch banner, Branches page (create/edit/deactivate), Account page (change own password), Dashboard showing role and visible branches
+  - [ ] 2e-2 — Users page (create, branches, activate/deactivate, promote/demote, reset password)
+  - [ ] 2e-3 — global branch switcher, branch columns, better create-form errors

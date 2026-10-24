@@ -1,6 +1,6 @@
 import { useQueryClient } from "@tanstack/react-query";
-import { isAxiosError } from "axios";
 import { Link, useParams } from "react-router-dom";
+import { errorMessage } from "../api/errors";
 import {
   getGetSalesSalesOrdersIdQueryKey,
   useGetSalesSalesOrdersId,
@@ -13,15 +13,6 @@ import {
 } from "../api/generated/stock/stock";
 import { SalesOrderStatus } from "../api/generated/syntraApiV1.schemas";
 import { StatusBadge } from "../components/StatusBadge";
-
-// The API returns RFC 9457 problem details; surface its `detail` text (e.g. the
-// oversell message) instead of a generic failure.
-function errorMessage(error: unknown): string {
-  if (isAxiosError(error) && typeof error.response?.data?.detail === "string") {
-    return error.response.data.detail;
-  }
-  return "Something went wrong - please try again.";
-}
 
 export function SalesOrderDetailPage() {
   const { id } = useParams<{ id: string }>();

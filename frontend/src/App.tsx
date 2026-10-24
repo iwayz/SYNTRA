@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { RequireAdmin } from "./auth/RequireAdmin";
 import { RequireAuth } from "./auth/RequireAuth";
 import { Shell } from "./components/Shell";
+import { AccountPage } from "./pages/AccountPage";
+import { BranchesPage } from "./pages/BranchesPage";
 import { CustomersPage } from "./pages/CustomersPage";
 import { DashboardPage } from "./pages/DashboardPage";
 import { LoginPage } from "./pages/LoginPage";
@@ -39,6 +42,10 @@ function App() {
           <Route path="/sales-orders" element={<SalesOrdersPage />} />
           <Route path="/sales-orders/new" element={<SalesOrderCreatePage />} />
           <Route path="/sales-orders/:id" element={<SalesOrderDetailPage />} />
+          <Route path="/account" element={<AccountPage />} />
+          <Route element={<RequireAdmin />}>
+            <Route path="/branches" element={<BranchesPage />} />
+          </Route>
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
