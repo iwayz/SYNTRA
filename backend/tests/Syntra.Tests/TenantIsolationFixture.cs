@@ -62,11 +62,15 @@ public class TenantIsolationFixture : IAsyncLifetime
         TenantBToken = await LoginAsync(TenantBSlug);
     }
 
+    // Connection string of an active test tenant's own database, for tests
+    // that need to look at the data directly instead of through the API.
+    public static string ConnectionStringFor(string slug) =>
+        $"Data Source=.;Initial Catalog=Syntra_{slug.Replace('-', '_')};Integrated Security=True;TrustServerCertificate=True";
+
     private async Task CreateActiveTenantAsync(PlatformDbContext platformDb, string slug)
     {
         var databaseName = $"Syntra_{slug.Replace('-', '_')}";
-        var connectionString =
-            $"Data Source=.;Initial Catalog={databaseName};Integrated Security=True;TrustServerCertificate=True";
+        var connectionString = ConnectionStringFor(slug);
 
         var tenant = new Tenant
         {

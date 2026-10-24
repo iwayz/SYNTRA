@@ -45,7 +45,7 @@ cd frontend
 npm run dev
 ```
 
-Then open `http://<tenant-slug>.localhost:5173` — the subdomain matters, it's how the backend resolves which tenant's database to use. A persistent demo tenant exists for exploring the UI: `demo.localhost:5173`, login `admin@demo.com` / `Demo123!`.
+Then open `http://<tenant-slug>.localhost:5173` — the subdomain matters, it's how the backend resolves which tenant's database to use. Two persistent demo tenants exist for exploring the UI: `demo.localhost:5173` (login `admin@demo.com` / `Demo123!`, has sample data) and `demo2.localhost:5173` (login `admin@demo2.com` / `Demo123!`, starts empty - handy for seeing that tenants never share data).
 
 To regenerate the frontend's API client after a backend endpoint changes: `npm run codegen` (requires the API running).
 
@@ -70,5 +70,5 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 - [x] 2a — `Branch` entity, `Warehouse.BranchId`, default "Main" branch seeded by the `AddBranches` migration (existing warehouses are backfilled into it), branch CRUD at `/tenancy/branches`; the Warehouses screen got a minimal branch picker
 - [x] 2b — user-to-branch assignment (`UserBranches`), admin-only user API at `/tenancy/users` (create, activate/deactivate, promote/demote, set branches, reset password), `POST /auth/change-password`; admin status, active flag and branches are read from the database on every request, not from the JWT. Assignments are stored but not yet enforced on stock/orders (that is 2c)
 - [x] 2c — branch scoping: non-admins only see and act on their assigned branches (branches, warehouses, stock movements/balance, purchase and sales orders; out-of-scope items return 404, creating in another branch is refused); admins see everything; optional `branchId` filter on the lists; stock balance rows carry the branch; warehouse creation is admin-only; an inactive branch blocks new warehouses/orders/adjustments but existing orders can still be closed out
-- [ ] 2d — business-data isolation tests across two tenants, plus branch-scoping tests
+- [x] 2d — cross-tenant business-data isolation tests (two seeded tenants with colliding ids and shared SKU/codes/email: list and by-id sweeps, per-tenant uniqueness, separate credentials, write isolation, concurrent reads/writes, direct database check, host-header spoofing) plus a second persistent demo tenant, `demo2`, to compare against `demo`. Branch-scoping tests shipped with 2c
 - [ ] 2e — frontend: branch management, branch filter, user assignment
