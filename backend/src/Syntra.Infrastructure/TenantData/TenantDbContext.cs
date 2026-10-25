@@ -31,6 +31,8 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
+    public DbSet<GoodsReceipt> GoodsReceipts => Set<GoodsReceipt>();
+    public DbSet<GoodsReceiptLine> GoodsReceiptLines => Set<GoodsReceiptLine>();
     public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
     public DbSet<SalesOrderLine> SalesOrderLines => Set<SalesOrderLine>();
 
@@ -125,7 +127,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
 
         modelBuilder.Entity<PurchaseOrder>(e =>
         {
-            e.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(o => o.Status).HasConversion<string>().HasMaxLength(20).IsConcurrencyToken();
             e.HasOne(o => o.Supplier)
                 .WithMany()
                 .HasForeignKey(o => o.SupplierId)
@@ -136,9 +138,36 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<GoodsReceipt>(e =>
+        {
+            e.HasOne<PurchaseOrder>()
+                .WithMany(o => o.GoodsReceipts)
+                .HasForeignKey(r => r.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.Property(r => r.Notes).HasMaxLength(500);
+        });
+
+        modelBuilder.Entity<GoodsReceiptLine>(e =>
+        {
+            e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.Notes).HasMaxLength(500);
+            e.HasOne<GoodsReceipt>()
+                .WithMany(r => r.Lines)
+                .HasForeignKey(l => l.GoodsReceiptId);
+            e.HasOne<PurchaseOrderLine>()
+                .WithMany()
+                .HasForeignKey(l => l.PurchaseOrderLineId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.StockMovement)
+                .WithMany()
+                .HasForeignKey("StockMovementId")
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<PurchaseOrderLine>(e =>
         {
             e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.QuantityReceived).HasPrecision(18, 4);
             e.Property(l => l.UnitPrice).HasPrecision(18, 4);
             e.HasOne(l => l.PurchaseOrder)
                 .WithMany(o => o.Lines)
@@ -155,7 +184,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
 
         modelBuilder.Entity<SalesOrder>(e =>
         {
-            e.Property(o => o.Status).HasConversion<string>().HasMaxLength(20);
+            e.Property(o => o.Status).HasConversion<string>().HasMaxLength(20).IsConcurrencyToken();
             e.HasOne(o => o.Customer)
                 .WithMany()
                 .HasForeignKey(o => o.CustomerId)

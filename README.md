@@ -76,3 +76,10 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
   - [x] 2e-1 — current-user hook, admin-only nav and route guard, no-branch banner, Branches page (create/edit/deactivate), Account page (change own password), Dashboard showing role and visible branches
   - [x] 2e-2 — Users page (admin): list with role/status/branches, create form, per-row edit branches, activate/deactivate, make/remove admin, reset password; actions on your own row are disabled
   - [x] 2e-3 — global branch switcher in the header (remembered per user, hidden with one branch) that narrows every list and the warehouse dropdowns; Branch columns on stock and order screens; create forms show the server's real error and grey out warehouses in inactive branches; the add-warehouse form is hidden from non-admins
+
+**Phase 3 (full inventory ops) — in progress.**
+- [x] 3a — safe stock writes and goods receipts: every stock check-then-write now goes through one `StockLedger` that holds a per-product, per-warehouse lock (fixes a real race where concurrent sales confirms could oversell, or confirm the same order twice); order status is a concurrency token so conflicting changes return 409; manual adjustments can no longer take stock below zero; goods receipts allow partial deliveries with per-line notes, POs gain a `PartiallyReceived` status and per-line received/outstanding quantities, and a partially received order can be closed when the rest will not arrive
+- [ ] 3b — batch tracking (per-product opt-in, expiry, FEFO)
+- [ ] 3c — transfers between warehouses (two-step, with in-transit)
+- [ ] 3d — stock opname
+- [ ] 3e — returns

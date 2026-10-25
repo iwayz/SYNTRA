@@ -20,4 +20,8 @@ public class PurchaseOrderLine
 
     public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+
+    // Running total received across all goods receipts, in this line's own unit.
+    // Kept in step with the receipts inside the same stock transaction.
+    public decimal QuantityReceived { get; set; }
 }

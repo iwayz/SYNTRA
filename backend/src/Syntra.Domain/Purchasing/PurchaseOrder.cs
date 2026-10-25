@@ -16,4 +16,5 @@ public class PurchaseOrder
     public PurchaseOrderStatus Status { get; set; }
 
     public ICollection<PurchaseOrderLine> Lines { get; set; } = new List<PurchaseOrderLine>();
+    public ICollection<GoodsReceipt> GoodsReceipts { get; set; } = new List<GoodsReceipt>();
 }

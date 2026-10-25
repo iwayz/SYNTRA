@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using Syntra.Infrastructure.Inventory;
 
 namespace Syntra.Api.Filters;
 
@@ -23,6 +24,10 @@ public class GlobalExceptionHandler : IExceptionHandler
 
         var (statusCode, title) = exception switch
         {
+            StockLockTimeoutException
+                => (StatusCodes.Status409Conflict, "Stock for this item is being updated by another request. Please retry."),
+            DbUpdateConcurrencyException
+                => (StatusCodes.Status409Conflict, "This record was changed by someone else while you were working. Reload and try again."),
             DbUpdateException dbEx when IsUniqueConstraintViolation(dbEx)
                 => (StatusCodes.Status409Conflict, "A record with the same value already exists."),
             _ => (StatusCodes.Status500InternalServerError, "An unexpected error occurred.")

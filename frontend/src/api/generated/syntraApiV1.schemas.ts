@@ -26,6 +26,23 @@ export interface CreateCustomerRequest {
   name: string;
 }
 
+export interface GoodsReceiptLineRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderLineId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity: number | string;
+  /** @nullable */
+  notes: string | null;
+}
+
+export interface CreateGoodsReceiptRequest {
+  /** @nullable */
+  receiptDate: string | null;
+  /** @nullable */
+  notes: string | null;
+  lines: GoodsReceiptLineRequest[];
+}
+
 export interface CreateProductRequest {
   sku: string;
   name: string;
@@ -119,54 +136,6 @@ export interface Customer {
   name?: string;
 }
 
-export interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  token: string;
-}
-
-export interface MeResponse {
-  tenantSlug: string;
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  tenantId: number | string;
-  /** @nullable */
-  userId: string | null;
-  /** @nullable */
-  email: string | null;
-  roles: string[];
-  isAdmin: boolean;
-  /** @items.pattern ^-?(?:0|[1-9]\d*)$ */
-  branchIds: (number | string)[];
-}
-
-export type MovementType = typeof MovementType[keyof typeof MovementType];
-
-
-export const MovementType = {
-  Purchase: 'Purchase',
-  Sale: 'Sale',
-  ManualAdjustment: 'ManualAdjustment',
-} as const;
-
-export interface ProblemDetails {
-  /** @nullable */
-  type?: string | null;
-  /** @nullable */
-  title?: string | null;
-  /**
-     * @nullable
-     * @pattern ^-?(?:0|[1-9]\d*)$
-     */
-  status?: number | string | null;
-  /** @nullable */
-  detail?: string | null;
-  /** @nullable */
-  instance?: string | null;
-}
-
 export interface UnitOfMeasure {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   unitOfMeasureId?: number | string;
@@ -198,12 +167,6 @@ export interface Product {
   unitConversions?: ProductUnitConversion[];
 }
 
-export interface Supplier {
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  supplierId?: number | string;
-  name?: string;
-}
-
 export interface Warehouse {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   warehouseId?: number | string;
@@ -213,12 +176,114 @@ export interface Warehouse {
   branch?: null | Branch;
 }
 
+export type MovementType = typeof MovementType[keyof typeof MovementType];
+
+
+export const MovementType = {
+  Purchase: 'Purchase',
+  Sale: 'Sale',
+  ManualAdjustment: 'ManualAdjustment',
+} as const;
+
+export interface StockMovement {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockMovementId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  product?: Product;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId?: number | string;
+  warehouse?: Warehouse;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  movementType?: MovementType;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  referenceId?: number | string | null;
+  occurredAt?: string;
+  /** @nullable */
+  notes?: string | null;
+}
+
+export interface GoodsReceiptLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  goodsReceiptLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  goodsReceiptId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /** @nullable */
+  notes?: string | null;
+  stockMovement?: StockMovement;
+}
+
+export interface GoodsReceipt {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  goodsReceiptId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderId?: number | string;
+  receiptDate?: string;
+  /** @nullable */
+  notes?: string | null;
+  lines?: GoodsReceiptLine[];
+}
+
+export interface LoginRequest {
+  email: string;
+  password: string;
+}
+
+export interface LoginResponse {
+  token: string;
+}
+
+export interface MeResponse {
+  tenantSlug: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  tenantId: number | string;
+  /** @nullable */
+  userId: string | null;
+  /** @nullable */
+  email: string | null;
+  roles: string[];
+  isAdmin: boolean;
+  /** @items.pattern ^-?(?:0|[1-9]\d*)$ */
+  branchIds: (number | string)[];
+}
+
+export interface ProblemDetails {
+  /** @nullable */
+  type?: string | null;
+  /** @nullable */
+  title?: string | null;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  status?: number | string | null;
+  /** @nullable */
+  detail?: string | null;
+  /** @nullable */
+  instance?: string | null;
+}
+
+export interface Supplier {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  supplierId?: number | string;
+  name?: string;
+}
+
 export type PurchaseOrderStatus = typeof PurchaseOrderStatus[keyof typeof PurchaseOrderStatus];
 
 
 export const PurchaseOrderStatus = {
   Draft: 'Draft',
   Confirmed: 'Confirmed',
+  PartiallyReceived: 'PartiallyReceived',
   Received: 'Received',
   Cancelled: 'Cancelled',
 } as const;
@@ -239,6 +304,8 @@ export interface PurchaseOrderLine {
   quantity?: number | string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   unitPrice?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantityReceived?: number | string;
 }
 
 export interface PurchaseOrder {
@@ -253,6 +320,7 @@ export interface PurchaseOrder {
   orderDate?: string;
   status?: PurchaseOrderStatus;
   lines?: PurchaseOrderLine[];
+  goodsReceipts?: GoodsReceipt[];
 }
 
 export interface ResetUserPasswordRequest {
@@ -326,28 +394,6 @@ export interface StockBalance {
   branchName: string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   quantityOnHand: number | string;
-}
-
-export interface StockMovement {
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  stockMovementId?: number | string;
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  productId?: number | string;
-  product?: Product;
-  /** @pattern ^-?(?:0|[1-9]\d*)$ */
-  warehouseId?: number | string;
-  warehouse?: Warehouse;
-  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
-  quantity?: number | string;
-  movementType?: MovementType;
-  /**
-     * @nullable
-     * @pattern ^-?(?:0|[1-9]\d*)$
-     */
-  referenceId?: number | string | null;
-  occurredAt?: string;
-  /** @nullable */
-  notes?: string | null;
 }
 
 export interface UpdateBranchRequest {

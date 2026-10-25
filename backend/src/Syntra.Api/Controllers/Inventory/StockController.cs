@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Syntra.Api.Auth;
 using Syntra.Domain.Inventory;
+using Syntra.Infrastructure.Inventory;
 using Syntra.Infrastructure.TenantData;
 
 namespace Syntra.Api.Controllers.Inventory;
@@ -39,12 +40,18 @@ public class StockController : ControllerBase
     private readonly TenantDbContext _tenantDb;
     private readonly ICurrentUserAccess _userAccess;
     private readonly IBranchScope _branchScope;
+    private readonly IStockLedger _stockLedger;
 
-    public StockController(TenantDbContext tenantDb, ICurrentUserAccess userAccess, IBranchScope branchScope)
+    public StockController(
+        TenantDbContext tenantDb,
+        ICurrentUserAccess userAccess,
+        IBranchScope branchScope,
+        IStockLedger stockLedger)
     {
         _tenantDb = tenantDb;
         _userAccess = userAccess;
         _branchScope = branchScope;
+        _stockLedger = stockLedger;
     }
 
     [HttpGet("stock-movements")]
@@ -145,19 +152,30 @@ public class StockController : ControllerBase
             return ValidationProblem(warehouseError!);
         }
 
-        var movement = new StockMovement
-        {
-            ProductId = request.ProductId,
-            WarehouseId = request.WarehouseId,
-            Quantity = request.Quantity,
-            MovementType = MovementType.ManualAdjustment,
-            ReferenceId = null,
-            OccurredAt = DateTime.UtcNow,
-            Notes = request.Notes
-        };
+        await using var stock = await _stockLedger.BeginAsync([(request.ProductId, request.WarehouseId)]);
 
-        _tenantDb.StockMovements.Add(movement);
-        await _tenantDb.SaveChangesAsync();
+        // A reduction may not take the warehouse below zero (the same rule sales
+        // orders follow); corrections to the other side are always fine.
+        if (request.Quantity < 0)
+        {
+            var onHand = await stock.OnHandAsync(request.ProductId, request.WarehouseId);
+            if (onHand + request.Quantity < 0)
+            {
+                return ValidationProblem(
+                    $"Cannot reduce stock by {-request.Quantity}: only {onHand} is on hand for product " +
+                    $"{request.ProductId} at warehouse {request.WarehouseId}.");
+            }
+        }
+
+        var movement = stock.Post(
+            request.ProductId,
+            request.WarehouseId,
+            request.Quantity,
+            MovementType.ManualAdjustment,
+            referenceId: null,
+            request.Notes);
+
+        await stock.CommitAsync();
 
         return CreatedAtAction(nameof(ListMovements), new { productId = movement.ProductId }, movement);
     }

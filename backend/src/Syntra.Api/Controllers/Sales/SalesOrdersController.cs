@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using Syntra.Api.Auth;
 using Syntra.Domain.Inventory;
 using Syntra.Domain.Sales;
+using Syntra.Infrastructure.Inventory;
 using Syntra.Infrastructure.TenantData;
 
 namespace Syntra.Api.Controllers.Sales;
@@ -47,12 +48,18 @@ public class SalesOrdersController : ControllerBase
     private readonly TenantDbContext _tenantDb;
     private readonly ICurrentUserAccess _userAccess;
     private readonly IBranchScope _branchScope;
+    private readonly IStockLedger _stockLedger;
 
-    public SalesOrdersController(TenantDbContext tenantDb, ICurrentUserAccess userAccess, IBranchScope branchScope)
+    public SalesOrdersController(
+        TenantDbContext tenantDb,
+        ICurrentUserAccess userAccess,
+        IBranchScope branchScope,
+        IStockLedger stockLedger)
     {
         _tenantDb = tenantDb;
         _userAccess = userAccess;
         _branchScope = branchScope;
+        _stockLedger = stockLedger;
     }
 
     [HttpGet]
@@ -159,15 +166,25 @@ public class SalesOrdersController : ControllerBase
     {
         var access = await _userAccess.GetAsync();
 
-        var order = await _tenantDb.SalesOrders
+        // This first look only tells us which stock to lock (and enforces branch
+        // scope). Everything that decides the outcome is re-read after the locks
+        // are held, so a concurrent confirm can't act on stale status or balances.
+        var preview = await _tenantDb.SalesOrders.AsNoTracking()
             .VisibleTo(access)
             .Include(o => o.Lines)
             .FirstOrDefaultAsync(o => o.SalesOrderId == id);
 
-        if (order is null)
+        if (preview is null)
         {
             return NotFound();
         }
+
+        await using var stock = await _stockLedger.BeginAsync(
+            preview.Lines.Select(l => (l.ProductId, preview.WarehouseId)));
+
+        var order = await _tenantDb.SalesOrders
+            .Include(o => o.Lines)
+            .FirstAsync(o => o.SalesOrderId == id);
 
         if (order.Status != SalesOrderStatus.Draft)
         {
@@ -200,9 +217,7 @@ public class SalesOrdersController : ControllerBase
             var baseQuantity = line.Quantity * factor;
             baseQuantities[line.SalesOrderLineId] = baseQuantity;
 
-            var currentBalance = await _tenantDb.StockMovements.AsNoTracking()
-                .Where(m => m.ProductId == line.ProductId && m.WarehouseId == order.WarehouseId)
-                .SumAsync(m => m.Quantity);
+            var currentBalance = await stock.OnHandAsync(line.ProductId, order.WarehouseId);
 
             var alreadyCommitted = committedSoFar.GetValueOrDefault(line.ProductId);
             var available = currentBalance - alreadyCommitted;
@@ -225,19 +240,16 @@ public class SalesOrdersController : ControllerBase
         // Pass 2: all lines passed - create every movement, no partial fulfillment.
         foreach (var line in order.Lines)
         {
-            _tenantDb.StockMovements.Add(new StockMovement
-            {
-                ProductId = line.ProductId,
-                WarehouseId = order.WarehouseId,
-                Quantity = -baseQuantities[line.SalesOrderLineId],
-                MovementType = MovementType.Sale,
-                ReferenceId = order.SalesOrderId,
-                OccurredAt = DateTime.UtcNow
-            });
+            stock.Post(
+                line.ProductId,
+                order.WarehouseId,
+                -baseQuantities[line.SalesOrderLineId],
+                MovementType.Sale,
+                order.SalesOrderId);
         }
 
         order.Status = SalesOrderStatus.Confirmed;
-        await _tenantDb.SaveChangesAsync();
+        await stock.CommitAsync();
 
         return Ok(order);
     }

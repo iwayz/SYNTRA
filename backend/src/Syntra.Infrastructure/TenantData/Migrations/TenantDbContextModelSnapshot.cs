@@ -269,6 +269,67 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.ToTable("Warehouses");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Purchasing.GoodsReceipt", b =>
+                {
+                    b.Property<int>("GoodsReceiptId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GoodsReceiptId"));
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ReceiptDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("GoodsReceiptId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("GoodsReceipts");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Purchasing.GoodsReceiptLine", b =>
+                {
+                    b.Property<int>("GoodsReceiptLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("GoodsReceiptLineId"));
+
+                    b.Property<int>("GoodsReceiptId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("PurchaseOrderLineId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("StockMovementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("GoodsReceiptLineId");
+
+                    b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("PurchaseOrderLineId");
+
+                    b.HasIndex("StockMovementId");
+
+                    b.ToTable("GoodsReceiptLines");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseOrder", b =>
                 {
                     b.Property<int>("PurchaseOrderId")
@@ -281,6 +342,7 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -315,6 +377,10 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasColumnType("int");
 
                     b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("QuantityReceived")
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
@@ -385,6 +451,7 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Status")
+                        .IsConcurrencyToken()
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
@@ -727,6 +794,38 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("Branch");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Purchasing.GoodsReceipt", b =>
+                {
+                    b.HasOne("Syntra.Domain.Purchasing.PurchaseOrder", null)
+                        .WithMany("GoodsReceipts")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Purchasing.GoodsReceiptLine", b =>
+                {
+                    b.HasOne("Syntra.Domain.Purchasing.GoodsReceipt", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("GoodsReceiptId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Purchasing.PurchaseOrderLine", null)
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.StockMovement", "StockMovement")
+                        .WithMany()
+                        .HasForeignKey("StockMovementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("StockMovement");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseOrder", b =>
                 {
                     b.HasOne("Syntra.Domain.Purchasing.Supplier", "Supplier")
@@ -839,8 +938,15 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("UnitConversions");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Purchasing.GoodsReceipt", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseOrder", b =>
                 {
+                    b.Navigation("GoodsReceipts");
+
                     b.Navigation("Lines");
                 });
 

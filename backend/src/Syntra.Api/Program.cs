@@ -10,6 +10,7 @@ using Syntra.Api.Filters;
 using Syntra.Api.Middleware;
 using Syntra.Domain.Platform;
 using Syntra.Domain.TenantData;
+using Syntra.Infrastructure.Inventory;
 using Syntra.Infrastructure.Platform;
 using Syntra.Infrastructure.TenantData;
 
@@ -64,6 +65,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccess, CurrentUserAccess>();
 builder.Services.AddScoped<IBranchScope, BranchScope>();
+builder.Services.AddScoped<IStockLedger, StockLedger>();
 builder.Services.AddScoped<IAuthorizationHandler, TenantAdminHandler>();
 
 builder.Services.AddAuthorization(options =>

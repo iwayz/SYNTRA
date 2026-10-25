@@ -24,8 +24,10 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  CreateGoodsReceiptRequest,
   CreatePurchaseOrderRequest,
   GetPurchasingPurchaseOrdersParams,
+  GoodsReceipt,
   PurchaseOrder
 } from '../syntraApiV1.schemas';
 
@@ -400,6 +402,127 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPostPurchasingPurchaseOrdersIdReceiveMutationOptions(options), queryClient);
+    }
+    export const postPurchasingPurchaseOrdersIdGoodsReceipts = (
+    id: number,
+    createGoodsReceiptRequest: CreateGoodsReceiptRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<GoodsReceipt>(
+      {url: `/purchasing/purchase-orders/${id}/goods-receipts`, method: 'POST',
+      headers: {'Content-Type': 'application/json', },
+      data: createGoodsReceiptRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getPostPurchasingPurchaseOrdersIdGoodsReceiptsMutationKey = () => ['postPurchasingPurchaseOrdersIdGoodsReceipts'] as const;
+
+export const getPostPurchasingPurchaseOrdersIdGoodsReceiptsMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdGoodsReceipts>>, TError,PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdGoodsReceipts>>, TError,PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationVariables, TContext> => {
+
+const mutationKey = getPostPurchasingPurchaseOrdersIdGoodsReceiptsMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdGoodsReceipts>>, PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  postPurchasingPurchaseOrdersIdGoodsReceipts(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationResult = NonNullable<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdGoodsReceipts>>>
+    export type PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationBody = CreateGoodsReceiptRequest
+    export type PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationError = unknown
+    export type PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationVariables = {id: number;data: CreateGoodsReceiptRequest}
+
+    export const usePostPurchasingPurchaseOrdersIdGoodsReceipts = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdGoodsReceipts>>, TError,PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdGoodsReceipts>>,
+        TError,
+        PostPurchasingPurchaseOrdersIdGoodsReceiptsMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostPurchasingPurchaseOrdersIdGoodsReceiptsMutationOptions(options), queryClient);
+    }
+    export const postPurchasingPurchaseOrdersIdClose = (
+    id: number,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<PurchaseOrder>(
+      {url: `/purchasing/purchase-orders/${id}/close`, method: 'POST', signal
+    },
+      );
+    }
+
+
+
+
+export const getPostPurchasingPurchaseOrdersIdCloseMutationKey = () => ['postPurchasingPurchaseOrdersIdClose'] as const;
+
+export const getPostPurchasingPurchaseOrdersIdCloseMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdClose>>, TError,PostPurchasingPurchaseOrdersIdCloseMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdClose>>, TError,PostPurchasingPurchaseOrdersIdCloseMutationVariables, TContext> => {
+
+const mutationKey = getPostPurchasingPurchaseOrdersIdCloseMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdClose>>, PostPurchasingPurchaseOrdersIdCloseMutationVariables> = (props) => {
+          const {id} = props ?? {};
+
+          return  postPurchasingPurchaseOrdersIdClose(id,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PostPurchasingPurchaseOrdersIdCloseMutationResult = NonNullable<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdClose>>>
+
+    export type PostPurchasingPurchaseOrdersIdCloseMutationError = unknown
+    export type PostPurchasingPurchaseOrdersIdCloseMutationVariables = {id: number}
+
+    export const usePostPurchasingPurchaseOrdersIdClose = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdClose>>, TError,PostPurchasingPurchaseOrdersIdCloseMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof postPurchasingPurchaseOrdersIdClose>>,
+        TError,
+        PostPurchasingPurchaseOrdersIdCloseMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPostPurchasingPurchaseOrdersIdCloseMutationOptions(options), queryClient);
     }
     export const postPurchasingPurchaseOrdersIdCancel = (
     id: number,
