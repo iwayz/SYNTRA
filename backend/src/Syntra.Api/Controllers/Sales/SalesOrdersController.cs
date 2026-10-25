@@ -87,6 +87,7 @@ public class SalesOrdersController : ControllerBase
             .Include(o => o.Warehouse)
             .Include(o => o.Lines).ThenInclude(l => l.Product)
             .Include(o => o.Lines).ThenInclude(l => l.UnitOfMeasure)
+            .Include(o => o.Returns).ThenInclude(r => r.Lines).ThenInclude(l => l.ProductBatch)
             .FirstOrDefaultAsync(o => o.SalesOrderId == id);
 
         return order is null ? NotFound() : Ok(order);

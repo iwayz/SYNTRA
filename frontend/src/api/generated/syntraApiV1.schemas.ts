@@ -100,6 +100,22 @@ export interface CreatePurchaseOrderRequest {
   lines: CreatePurchaseOrderLineRequest[];
 }
 
+export interface PurchaseReturnLineRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderLineId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity: number | string;
+  /** @nullable */
+  batchNumber: string | null;
+}
+
+export interface CreatePurchaseReturnRequest {
+  reason: string;
+  /** @nullable */
+  returnDate: string | null;
+  lines: PurchaseReturnLineRequest[];
+}
+
 export interface CreateSalesOrderLineRequest {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   productId: number | string;
@@ -118,6 +134,31 @@ export interface CreateSalesOrderRequest {
   warehouseId: number | string;
   orderDate: string;
   lines: CreateSalesOrderLineRequest[];
+}
+
+export type ReturnDisposition = typeof ReturnDisposition[keyof typeof ReturnDisposition];
+
+
+export const ReturnDisposition = {
+  Restock: 'Restock',
+  WriteOff: 'WriteOff',
+} as const;
+
+export interface SalesReturnLineRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesOrderLineId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity: number | string;
+  /** @nullable */
+  batchNumber: string | null;
+  disposition: ReturnDisposition;
+}
+
+export interface CreateSalesReturnRequest {
+  reason: string;
+  /** @nullable */
+  returnDate: string | null;
+  lines: SalesReturnLineRequest[];
 }
 
 export interface CreateStockAdjustmentRequest {
@@ -252,6 +293,8 @@ export const MovementType = {
   TransferIn: 'TransferIn',
   TransferReversal: 'TransferReversal',
   StockCount: 'StockCount',
+  SalesReturn: 'SalesReturn',
+  PurchaseReturn: 'PurchaseReturn',
 } as const;
 
 export interface StockMovement {
@@ -387,6 +430,38 @@ export interface PurchaseOrderLine {
   unitPrice?: number | string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   quantityReceived?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantityReturned?: number | string;
+}
+
+export interface PurchaseReturnLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseReturnLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseReturnId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  baseQuantity?: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  productBatchId?: number | string | null;
+  productBatch?: null | ProductBatch;
+  stockMovement?: StockMovement;
+}
+
+export interface PurchaseReturn {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseReturnId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  purchaseOrderId?: number | string;
+  returnDate?: string;
+  reason?: string;
+  lines?: PurchaseReturnLine[];
 }
 
 export interface PurchaseOrder {
@@ -402,6 +477,7 @@ export interface PurchaseOrder {
   status?: PurchaseOrderStatus;
   lines?: PurchaseOrderLine[];
   goodsReceipts?: GoodsReceipt[];
+  returns?: PurchaseReturn[];
 }
 
 export interface ReceiveTransferLineRequest {
@@ -417,6 +493,33 @@ export interface ReceiveTransferRequest {
 
 export interface ResetUserPasswordRequest {
   newPassword: string;
+}
+
+export interface ReturnableBatch {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  batchId: number | string;
+  batchNumber: string;
+  /** @nullable */
+  expiryDate: string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  returnable: number | string;
+}
+
+export interface ReturnableLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  lineId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId: number | string;
+  productName: string;
+  unitCode: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  ordered: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  returned: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  returnable: number | string;
+  batchTracked: boolean;
+  batches: ReturnableBatch[];
 }
 
 export type SalesOrderStatus = typeof SalesOrderStatus[keyof typeof SalesOrderStatus];
@@ -444,6 +547,41 @@ export interface SalesOrderLine {
   quantity?: number | string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   unitPrice?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantityReturned?: number | string;
+}
+
+export interface SalesReturnLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesReturnLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesReturnId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesOrderLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  baseQuantity?: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  productBatchId?: number | string | null;
+  productBatch?: null | ProductBatch;
+  disposition?: ReturnDisposition;
+  stockMovement?: null | StockMovement;
+}
+
+export interface SalesReturn {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesReturnId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  salesOrderId?: number | string;
+  returnDate?: string;
+  reason?: string;
+  lines?: SalesReturnLine[];
 }
 
 export interface SalesOrder {
@@ -458,6 +596,7 @@ export interface SalesOrder {
   orderDate?: string;
   status?: SalesOrderStatus;
   lines?: SalesOrderLine[];
+  returns?: SalesReturn[];
 }
 
 export interface SetBatchTrackingRequest {

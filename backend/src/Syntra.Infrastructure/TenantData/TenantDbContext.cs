@@ -41,6 +41,10 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<GoodsReceiptLine> GoodsReceiptLines => Set<GoodsReceiptLine>();
     public DbSet<SalesOrder> SalesOrders => Set<SalesOrder>();
     public DbSet<SalesOrderLine> SalesOrderLines => Set<SalesOrderLine>();
+    public DbSet<SalesReturn> SalesReturns => Set<SalesReturn>();
+    public DbSet<SalesReturnLine> SalesReturnLines => Set<SalesReturnLine>();
+    public DbSet<PurchaseReturn> PurchaseReturns => Set<PurchaseReturn>();
+    public DbSet<PurchaseReturnLine> PurchaseReturnLines => Set<PurchaseReturnLine>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -293,6 +297,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
         {
             e.Property(l => l.Quantity).HasPrecision(18, 4);
             e.Property(l => l.QuantityReceived).HasPrecision(18, 4);
+            e.Property(l => l.QuantityReturned).HasPrecision(18, 4);
             e.Property(l => l.UnitPrice).HasPrecision(18, 4);
             e.HasOne(l => l.PurchaseOrder)
                 .WithMany(o => o.Lines)
@@ -320,9 +325,75 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
+        modelBuilder.Entity<SalesReturn>(e =>
+        {
+            e.Property(r => r.Reason).HasMaxLength(200);
+            e.HasOne<SalesOrder>()
+                .WithMany(o => o.Returns)
+                .HasForeignKey(r => r.SalesOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<SalesReturnLine>(e =>
+        {
+            e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.BaseQuantity).HasPrecision(18, 4);
+            e.Property(l => l.Disposition).HasConversion<string>().HasMaxLength(20);
+            e.HasOne<SalesReturn>()
+                .WithMany(r => r.Lines)
+                .HasForeignKey(l => l.SalesReturnId);
+            e.HasOne<SalesOrderLine>()
+                .WithMany()
+                .HasForeignKey(l => l.SalesOrderLineId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne<Product>()
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.ProductBatch)
+                .WithMany()
+                .HasForeignKey(l => l.ProductBatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.StockMovement)
+                .WithMany()
+                .HasForeignKey("StockMovementId")
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PurchaseReturn>(e =>
+        {
+            e.Property(r => r.Reason).HasMaxLength(200);
+            e.HasOne<PurchaseOrder>()
+                .WithMany(o => o.Returns)
+                .HasForeignKey(r => r.PurchaseOrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<PurchaseReturnLine>(e =>
+        {
+            e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.BaseQuantity).HasPrecision(18, 4);
+            e.HasOne<PurchaseReturn>()
+                .WithMany(r => r.Lines)
+                .HasForeignKey(l => l.PurchaseReturnId);
+            e.HasOne<PurchaseOrderLine>()
+                .WithMany()
+                .HasForeignKey(l => l.PurchaseOrderLineId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.ProductBatch)
+                .WithMany()
+                .HasForeignKey(l => l.ProductBatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.StockMovement)
+                .WithMany()
+                .HasForeignKey("StockMovementId")
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
         modelBuilder.Entity<SalesOrderLine>(e =>
         {
             e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.Property(l => l.QuantityReturned).HasPrecision(18, 4);
             e.Property(l => l.UnitPrice).HasPrecision(18, 4);
             e.HasOne(l => l.SalesOrder)
                 .WithMany(o => o.Lines)

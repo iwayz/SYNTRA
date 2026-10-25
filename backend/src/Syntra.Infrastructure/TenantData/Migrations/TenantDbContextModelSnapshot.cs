@@ -630,6 +630,10 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<decimal>("QuantityReturned")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<int>("UnitOfMeasureId")
                         .HasColumnType("int");
 
@@ -646,6 +650,73 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.HasIndex("UnitOfMeasureId");
 
                     b.ToTable("PurchaseOrderLines");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseReturn", b =>
+                {
+                    b.Property<int>("PurchaseReturnId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PurchaseReturnId"));
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("ReturnDate")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("PurchaseReturnId");
+
+                    b.HasIndex("PurchaseOrderId");
+
+                    b.ToTable("PurchaseReturns");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseReturnLine", b =>
+                {
+                    b.Property<int>("PurchaseReturnLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("PurchaseReturnLineId"));
+
+                    b.Property<decimal>("BaseQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseOrderLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("PurchaseReturnId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("StockMovementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("PurchaseReturnLineId");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("PurchaseOrderLineId");
+
+                    b.HasIndex("PurchaseReturnId");
+
+                    b.HasIndex("StockMovementId");
+
+                    b.ToTable("PurchaseReturnLines");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Purchasing.Supplier", b =>
@@ -729,6 +800,10 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("decimal(18,4)");
 
+                    b.Property<decimal>("QuantityReturned")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
                     b.Property<int>("SalesOrderId")
                         .HasColumnType("int");
 
@@ -748,6 +823,83 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.HasIndex("UnitOfMeasureId");
 
                     b.ToTable("SalesOrderLines");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Sales.SalesReturn", b =>
+                {
+                    b.Property<int>("SalesReturnId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesReturnId"));
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<DateTime>("ReturnDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("SalesOrderId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SalesReturnId");
+
+                    b.HasIndex("SalesOrderId");
+
+                    b.ToTable("SalesReturns");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Sales.SalesReturnLine", b =>
+                {
+                    b.Property<int>("SalesReturnLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SalesReturnLineId"));
+
+                    b.Property<decimal>("BaseQuantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<string>("Disposition")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("SalesOrderLineId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SalesReturnId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("StockMovementId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SalesReturnLineId");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("SalesOrderLineId");
+
+                    b.HasIndex("SalesReturnId");
+
+                    b.HasIndex("StockMovementId");
+
+                    b.ToTable("SalesReturnLines");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Tenancy.Branch", b =>
@@ -1250,6 +1402,45 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("UnitOfMeasure");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseReturn", b =>
+                {
+                    b.HasOne("Syntra.Domain.Purchasing.PurchaseOrder", null)
+                        .WithMany("Returns")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseReturnLine", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Syntra.Domain.Purchasing.PurchaseOrderLine", null)
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Purchasing.PurchaseReturn", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("PurchaseReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.StockMovement", "StockMovement")
+                        .WithMany()
+                        .HasForeignKey("StockMovementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("StockMovement");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Sales.SalesOrder", b =>
                 {
                     b.HasOne("Syntra.Domain.Sales.Customer", "Customer")
@@ -1294,6 +1485,50 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("SalesOrder");
 
                     b.Navigation("UnitOfMeasure");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Sales.SalesReturn", b =>
+                {
+                    b.HasOne("Syntra.Domain.Sales.SalesOrder", null)
+                        .WithMany("Returns")
+                        .HasForeignKey("SalesOrderId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Sales.SalesReturnLine", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Syntra.Domain.Inventory.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Sales.SalesOrderLine", null)
+                        .WithMany()
+                        .HasForeignKey("SalesOrderLineId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Sales.SalesReturn", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("SalesReturnId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.StockMovement", "StockMovement")
+                        .WithMany()
+                        .HasForeignKey("StockMovementId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("ProductBatch");
+
+                    b.Navigation("StockMovement");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Tenancy.UserBranch", b =>
@@ -1341,9 +1576,23 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("GoodsReceipts");
 
                     b.Navigation("Lines");
+
+                    b.Navigation("Returns");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Purchasing.PurchaseReturn", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Sales.SalesOrder", b =>
+                {
+                    b.Navigation("Lines");
+
+                    b.Navigation("Returns");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Sales.SalesReturn", b =>
                 {
                     b.Navigation("Lines");
                 });

@@ -14,6 +14,12 @@ import {
 } from "../api/generated/purchase-orders/purchase-orders";
 import { getGetInventoryStockMovementsQueryKey } from "../api/generated/stock/stock";
 import { getGetInventoryStockBalanceQueryKey } from "../api/generated/stock/stock";
+import {
+  getGetPurchasingPurchaseOrdersOrderIdReturnableQueryKey,
+  useGetPurchasingPurchaseOrdersOrderIdReturnable,
+  usePostPurchasingPurchaseOrdersOrderIdReturns,
+} from "../api/generated/purchase-returns/purchase-returns";
+import { ReturnForm } from "../components/ReturnForm";
 import { StatusBadge } from "../components/StatusBadge";
 import { BatchTracking, PurchaseOrderStatus } from "../api/generated/syntraApiV1.schemas";
 import { isTracked } from "../lib/batchTracking";
@@ -84,6 +90,21 @@ export function PurchaseOrderDetailPage() {
 
   const cancelMutation = usePostPurchasingPurchaseOrdersIdCancel({
     mutation: { onSuccess: invalidateOrder },
+  });
+
+  const canReturn =
+    orderQuery.data?.status === PurchaseOrderStatus.Received ||
+    orderQuery.data?.status === PurchaseOrderStatus.PartiallyReceived;
+  const returnableQuery = useGetPurchasingPurchaseOrdersOrderIdReturnable(orderId, { query: { enabled: canReturn } });
+
+  const returnMutation = usePostPurchasingPurchaseOrdersOrderIdReturns({
+    mutation: {
+      onSuccess: () => {
+        invalidateOrder();
+        queryClient.invalidateQueries({ queryKey: getGetPurchasingPurchaseOrdersOrderIdReturnableQueryKey(orderId) });
+        invalidateStock();
+      },
+    },
   });
 
   const order = orderQuery.data;
@@ -167,6 +188,7 @@ export function PurchaseOrderDetailPage() {
               <th className="pb-2 pr-4 font-medium">Unit</th>
               <th className="pb-2 pr-4 text-right font-medium">Ordered</th>
               <th className="pb-2 pr-4 text-right font-medium">Received</th>
+              <th className="pb-2 pr-4 text-right font-medium">Returned</th>
               <th className="pb-2 pr-4 text-right font-medium">Outstanding</th>
               <th className="pb-2 text-right font-medium">Unit price</th>
             </tr>
@@ -178,6 +200,7 @@ export function PurchaseOrderDetailPage() {
                 <td className="py-2 pr-4 text-slate-700">{line.unitOfMeasure?.code}</td>
                 <td className="py-2 pr-4 text-right text-slate-700">{line.quantity}</td>
                 <td className="py-2 pr-4 text-right text-slate-700">{line.quantityReceived}</td>
+                <td className="py-2 pr-4 text-right text-slate-700">{line.quantityReturned}</td>
                 <td
                   className={`py-2 pr-4 text-right font-medium ${
                     outstandingOf(line) > 0 && order.status === PurchaseOrderStatus.Received
@@ -361,6 +384,68 @@ export function PurchaseOrderDetailPage() {
               Record receipt
             </button>
           </form>
+        </div>
+      )}
+
+      {(order.returns ?? []).length > 0 && (
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h3 className="mb-4 text-sm font-semibold text-slate-900">Returns to supplier</h3>
+          <div className="space-y-4">
+            {[...(order.returns ?? [])]
+              .sort((a, b) => Number(b.purchaseReturnId) - Number(a.purchaseReturnId))
+              .map((purchaseReturn) => (
+                <div key={purchaseReturn.purchaseReturnId} className="text-sm">
+                  <p className="font-medium text-slate-900">
+                    Return #{purchaseReturn.purchaseReturnId}{" "}
+                    <span className="font-normal text-slate-500">
+                      · {purchaseReturn.returnDate && new Date(purchaseReturn.returnDate).toLocaleString()} ·{" "}
+                      {purchaseReturn.reason}
+                    </span>
+                  </p>
+                  <ul className="mt-1 space-y-0.5 text-slate-700">
+                    {purchaseReturn.lines?.map((returnLine) => {
+                      const orderLine = lines.find((l) => l.purchaseOrderLineId === returnLine.purchaseOrderLineId);
+                      return (
+                        <li key={returnLine.purchaseReturnLineId}>
+                          {returnLine.quantity} {orderLine?.unitOfMeasure?.code} × {orderLine?.product?.name}
+                          {returnLine.productBatch && (
+                            <span className="text-slate-500"> · batch {returnLine.productBatch.batchNumber}</span>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
+
+      {canReturn && (
+        <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
+          <h3 className="mb-4 text-sm font-semibold text-slate-900">Return to supplier</h3>
+          <ReturnForm
+            lines={returnableQuery.data ?? []}
+            withDisposition={false}
+            isPending={returnMutation.isPending}
+            submitLabel="Record return"
+            intro="Goods sent back to the supplier leave this order's warehouse. Only what is still in stock can go; anything already sold or used cannot be returned. A batch-tracked item must come from a batch this order received (expired batches are fine)."
+            onSubmit={(entries, reason) =>
+              returnMutation.mutateAsync({
+                orderId,
+                data: {
+                  reason,
+                  returnDate: null,
+                  lines: entries.map((entry) => ({
+                    purchaseOrderLineId: entry.lineId,
+                    quantity: entry.quantity,
+                    batchNumber: entry.batchNumber,
+                  })),
+                },
+              })
+            }
+          />
+          {returnMutation.isError && <p className="mt-3 text-sm text-red-600">{errorMessage(returnMutation.error)}</p>}
         </div>
       )}
 

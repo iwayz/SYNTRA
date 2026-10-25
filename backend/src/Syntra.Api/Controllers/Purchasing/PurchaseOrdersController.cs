@@ -120,6 +120,7 @@ public class PurchaseOrdersController : ControllerBase
             .Include(o => o.Warehouse)
             .Include(o => o.Lines).ThenInclude(l => l.Product)
             .Include(o => o.Lines).ThenInclude(l => l.UnitOfMeasure)
+            .Include(o => o.Returns).ThenInclude(r => r.Lines).ThenInclude(l => l.ProductBatch)
             .Include(o => o.GoodsReceipts).ThenInclude(r => r.Lines).ThenInclude(l => l.ProductBatch)
             .FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
 

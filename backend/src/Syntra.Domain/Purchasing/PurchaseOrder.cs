@@ -17,4 +17,5 @@ public class PurchaseOrder
 
     public ICollection<PurchaseOrderLine> Lines { get; set; } = new List<PurchaseOrderLine>();
     public ICollection<GoodsReceipt> GoodsReceipts { get; set; } = new List<GoodsReceipt>();
+    public ICollection<PurchaseReturn> Returns { get; set; } = new List<PurchaseReturn>();
 }

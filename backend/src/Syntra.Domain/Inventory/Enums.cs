@@ -14,7 +14,9 @@ public enum MovementType
     TransferOut,
     TransferIn,
     TransferReversal,
-    StockCount
+    StockCount,
+    SalesReturn,
+    PurchaseReturn
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -45,4 +47,15 @@ public enum StockCountStatus
     Posted,
 
     Cancelled
+}
+
+// What happens to goods a customer sends back.
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum ReturnDisposition
+{
+    // Back into sellable stock.
+    Restock,
+
+    // Damaged or unfit: recorded on the return but never enters stock.
+    WriteOff
 }

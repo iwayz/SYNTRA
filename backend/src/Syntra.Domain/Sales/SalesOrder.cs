@@ -16,4 +16,5 @@ public class SalesOrder
     public SalesOrderStatus Status { get; set; }
 
     public ICollection<SalesOrderLine> Lines { get; set; } = new List<SalesOrderLine>();
+    public ICollection<SalesReturn> Returns { get; set; } = new List<SalesReturn>();
 }

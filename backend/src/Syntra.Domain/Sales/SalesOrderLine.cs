@@ -20,4 +20,8 @@ public class SalesOrderLine
 
     public decimal Quantity { get; set; }
     public decimal UnitPrice { get; set; }
+
+    // Running total returned by customers, in this line's own unit. Kept in step
+    // with the return documents inside the same stock transaction.
+    public decimal QuantityReturned { get; set; }
 }
