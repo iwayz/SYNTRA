@@ -17,6 +17,8 @@ import { SalesOrderDetailPage } from "./pages/SalesOrderDetailPage";
 import { SalesOrdersPage } from "./pages/SalesOrdersPage";
 import { StockBalancePage } from "./pages/StockBalancePage";
 import { StockMovementsPage } from "./pages/StockMovementsPage";
+import { StockCountDetailPage } from "./pages/StockCountDetailPage";
+import { StockCountsPage } from "./pages/StockCountsPage";
 import { SuppliersPage } from "./pages/SuppliersPage";
 import { TransferCreatePage } from "./pages/TransferCreatePage";
 import { TransferDetailPage } from "./pages/TransferDetailPage";
@@ -40,6 +42,8 @@ function App() {
           <Route path="/suppliers" element={<SuppliersPage />} />
           <Route path="/stock-balance" element={<StockBalancePage />} />
           <Route path="/stock-movements" element={<StockMovementsPage />} />
+          <Route path="/stock-counts" element={<StockCountsPage />} />
+          <Route path="/stock-counts/:id" element={<StockCountDetailPage />} />
           <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
           <Route path="/purchase-orders/new" element={<PurchaseOrderCreatePage />} />
           <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />

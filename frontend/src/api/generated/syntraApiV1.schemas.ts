@@ -4,6 +4,15 @@
  * Syntra.Api | v1
  * OpenAPI spec version: 1.0.0
  */
+export interface AddStockCountRowRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId: number | string;
+  /** @nullable */
+  batchNumber: string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  countedQuantity: number | string;
+}
+
 export type BatchTracking = typeof BatchTracking[keyof typeof BatchTracking];
 
 
@@ -125,6 +134,13 @@ export interface CreateStockAdjustmentRequest {
   expiryDate?: string | null;
 }
 
+export interface CreateStockCountRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId: number | string;
+  /** @nullable */
+  notes: string | null;
+}
+
 export interface CreateSupplierRequest {
   name: string;
 }
@@ -235,6 +251,7 @@ export const MovementType = {
   TransferOut: 'TransferOut',
   TransferIn: 'TransferIn',
   TransferReversal: 'TransferReversal',
+  StockCount: 'StockCount',
 } as const;
 
 export interface StockMovement {
@@ -447,6 +464,14 @@ export interface SetBatchTrackingRequest {
   mode: BatchTracking;
 }
 
+export interface SetCountedQuantityRequest {
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$
+     */
+  countedQuantity: number | string | null;
+}
+
 export interface SetUserActiveRequest {
   isActive: boolean;
 }
@@ -482,6 +507,86 @@ export interface StockBalance {
   batchNumber: string | null;
   /** @nullable */
   expiryDate: string | null;
+}
+
+export type StockCountStatus = typeof StockCountStatus[keyof typeof StockCountStatus];
+
+
+export const StockCountStatus = {
+  Open: 'Open',
+  Posted: 'Posted',
+  Cancelled: 'Cancelled',
+} as const;
+
+export interface StockCountSummary {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockCountId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId: number | string;
+  warehouseName: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  branchId: number | string;
+  branchName: string;
+  status: StockCountStatus;
+  /** @nullable */
+  notes: string | null;
+  createdAt: string;
+  /** @nullable */
+  postedAt: string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  rowCount: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  countedCount: number | string;
+}
+
+export interface StockCountRowDto {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockCountLineId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId: number | string;
+  productSku: string;
+  productName: string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  batchId: number | string | null;
+  /** @nullable */
+  batchNumber: string | null;
+  /** @nullable */
+  expiryDate: string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  expectedQuantity: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$
+     */
+  countedQuantity: number | string | null;
+  /** @nullable */
+  countedAt: string | null;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$
+     */
+  systemQuantityAtCount: number | string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  currentQuantity: number | string;
+  isStale: boolean;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$
+     */
+  variance: number | string | null;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$
+     */
+  postedVariance: number | string | null;
+}
+
+export interface StockCountDetail {
+  summary: StockCountSummary;
+  rows: StockCountRowDto[];
 }
 
 export interface StockInTransit {
@@ -670,6 +775,14 @@ warehouseId?: number | string;
  * @pattern ^-?(?:0|[1-9]\d*)$
  */
 branchId?: number | string;
+};
+
+export type GetInventoryStockCountsParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
+status?: StockCountStatus;
 };
 
 export type GetInventoryTransfersParams = {

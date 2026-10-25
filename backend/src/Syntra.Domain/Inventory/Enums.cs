@@ -13,7 +13,8 @@ public enum MovementType
     ManualAdjustment,
     TransferOut,
     TransferIn,
-    TransferReversal
+    TransferReversal,
+    StockCount
 }
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
@@ -30,6 +31,18 @@ public enum StockTransferStatus
 
     // Fully received, or closed short with the remainder written off.
     Received,
+
+    Cancelled
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum StockCountStatus
+{
+    // Being counted; nothing has changed in stock yet.
+    Open,
+
+    // The counted differences have been applied to stock.
+    Posted,
 
     Cancelled
 }

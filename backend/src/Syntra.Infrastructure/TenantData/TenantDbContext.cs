@@ -30,6 +30,8 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<StockCount> StockCounts => Set<StockCount>();
+    public DbSet<StockCountLine> StockCountLines => Set<StockCountLine>();
     public DbSet<StockTransfer> StockTransfers => Set<StockTransfer>();
     public DbSet<StockTransferLine> StockTransferLines => Set<StockTransferLine>();
     public DbSet<StockTransferAllocation> StockTransferAllocations => Set<StockTransferAllocation>();
@@ -159,6 +161,52 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
             e.HasOne(o => o.Warehouse)
                 .WithMany()
                 .HasForeignKey(o => o.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StockCount>(e =>
+        {
+            // A concurrency token, like the other documents: posting racing a
+            // cancel (or another post) can't both succeed.
+            e.Property(c => c.Status).HasConversion<string>().HasMaxLength(20).IsConcurrencyToken();
+            e.Property(c => c.Notes).HasMaxLength(500);
+            e.HasOne(c => c.Warehouse)
+                .WithMany()
+                .HasForeignKey(c => c.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // One open count per warehouse, enforced by the database too.
+            e.HasIndex(c => c.WarehouseId)
+                .IsUnique()
+                .HasFilter("[Status] = 'Open'");
+        });
+
+        modelBuilder.Entity<StockCountLine>(e =>
+        {
+            e.Property(l => l.ExpectedQuantity).HasPrecision(18, 4);
+            e.Property(l => l.CountedQuantity).HasPrecision(18, 4);
+            e.Property(l => l.SystemQuantityAtCount).HasPrecision(18, 4);
+            e.Property(l => l.PostedVariance).HasPrecision(18, 4);
+
+            // A thing appears once per count (a NULL batch counts as one value here).
+            // HasFilter(null) switches off EF's default "WHERE ProductBatchId IS NOT NULL"
+            // on a unique index over a nullable column, so unbatched rows are covered too.
+            e.HasIndex(l => new { l.StockCountId, l.ProductId, l.ProductBatchId }).IsUnique().HasFilter(null);
+
+            e.HasOne<StockCount>()
+                .WithMany(c => c.Lines)
+                .HasForeignKey(l => l.StockCountId);
+            e.HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.Batch)
+                .WithMany()
+                .HasForeignKey(l => l.ProductBatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.AdjustmentMovement)
+                .WithMany()
+                .HasForeignKey("AdjustmentMovementId")
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

@@ -71,6 +71,18 @@ public static class BranchScopeExtensions
         return branchId is null ? query : query.Where(o => o.Warehouse!.BranchId == branchId);
     }
 
+    public static IQueryable<StockCount> VisibleTo(this IQueryable<StockCount> query, UserAccess access, int? branchId = null)
+    {
+        var ids = ScopedBranchIds(access);
+
+        if (ids is not null)
+        {
+            query = query.Where(c => ids.Contains(c.Warehouse.BranchId));
+        }
+
+        return branchId is null ? query : query.Where(c => c.Warehouse.BranchId == branchId);
+    }
+
     // A transfer belongs to two branches. It is visible to users of either end
     // (the sender needs to follow it, the receiver needs to act on it); the
     // optional branchId matches either end too.

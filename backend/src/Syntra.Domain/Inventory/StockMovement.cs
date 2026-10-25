@@ -4,7 +4,7 @@ namespace Syntra.Domain.Inventory;
 // negative = stock out. MovementType is the reporting classification and
 // also determines what ReferenceId points to (Purchase -> PurchaseOrderId,
 // Sale -> SalesOrderId, ManualAdjustment -> null, TransferOut / TransferIn /
-// TransferReversal -> StockTransferId).
+// TransferReversal -> StockTransferId, StockCount -> StockCountId).
 public class StockMovement
 {
     public int StockMovementId { get; set; }
