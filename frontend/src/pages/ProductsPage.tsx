@@ -6,7 +6,10 @@ import {
   useGetInventoryProducts,
   usePostInventoryProducts,
 } from "../api/generated/products/products";
+import { BatchTracking } from "../api/generated/syntraApiV1.schemas";
 import { useGetInventoryUnitsOfMeasure } from "../api/generated/unit-of-measures/unit-of-measures";
+import { errorMessage } from "../api/errors";
+import { TRACKING_LABELS } from "../lib/batchTracking";
 
 export function ProductsPage() {
   const queryClient = useQueryClient();
@@ -16,6 +19,7 @@ export function ProductsPage() {
   const [sku, setSku] = useState("");
   const [name, setName] = useState("");
   const [baseUnitOfMeasureId, setBaseUnitOfMeasureId] = useState("");
+  const [batchTracking, setBatchTracking] = useState<BatchTracking>(BatchTracking.None);
 
   const createMutation = usePostInventoryProducts({
     mutation: {
@@ -23,6 +27,7 @@ export function ProductsPage() {
         setSku("");
         setName("");
         setBaseUnitOfMeasureId("");
+        setBatchTracking(BatchTracking.None);
         queryClient.invalidateQueries({ queryKey: getGetInventoryProductsQueryKey() });
       },
     },
@@ -30,7 +35,7 @@ export function ProductsPage() {
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
-    createMutation.mutate({ data: { sku, name, baseUnitOfMeasureId: Number(baseUnitOfMeasureId) } });
+    createMutation.mutate({ data: { sku, name, baseUnitOfMeasureId: Number(baseUnitOfMeasureId), batchTracking } });
   }
 
   return (
@@ -44,6 +49,7 @@ export function ProductsPage() {
               <th className="pb-2 font-medium">SKU</th>
               <th className="pb-2 font-medium">Name</th>
               <th className="pb-2 font-medium">Base unit</th>
+              <th className="pb-2 font-medium">Tracking</th>
               <th></th>
             </tr>
           </thead>
@@ -53,6 +59,7 @@ export function ProductsPage() {
                 <td className="py-2 text-slate-700">{product.sku}</td>
                 <td className="py-2 text-slate-700">{product.name}</td>
                 <td className="py-2 text-slate-700">{product.baseUnitOfMeasure?.code}</td>
+                <td className="py-2 text-slate-700">{TRACKING_LABELS[product.batchTracking ?? BatchTracking.None]}</td>
                 <td className="py-2 text-right">
                   <Link to={`/products/${product.productId}`} className="text-sm font-medium text-indigo-600 hover:underline">
                     View
@@ -62,7 +69,7 @@ export function ProductsPage() {
             ))}
             {productsQuery.data?.length === 0 && (
               <tr>
-                <td colSpan={4} className="py-4 text-slate-400">
+                <td colSpan={5} className="py-4 text-slate-400">
                   No products yet.
                 </td>
               </tr>
@@ -73,7 +80,7 @@ export function ProductsPage() {
 
       <div className="rounded-xl bg-white p-6 shadow-sm ring-1 ring-slate-200">
         <h3 className="mb-4 text-sm font-semibold text-slate-900">Add a product</h3>
-        <form onSubmit={handleSubmit} className="flex items-end gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-wrap items-end gap-3">
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">SKU</label>
             <input
@@ -110,6 +117,20 @@ export function ProductsPage() {
               ))}
             </select>
           </div>
+          <div>
+            <label className="mb-1 block text-sm font-medium text-slate-700">Stock tracking</label>
+            <select
+              value={batchTracking}
+              onChange={(e) => setBatchTracking(e.target.value as BatchTracking)}
+              className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+            >
+              {Object.values(BatchTracking).map((mode) => (
+                <option key={mode} value={mode}>
+                  {TRACKING_LABELS[mode]}
+                </option>
+              ))}
+            </select>
+          </div>
           <button
             type="submit"
             disabled={createMutation.isPending}
@@ -119,7 +140,9 @@ export function ProductsPage() {
           </button>
         </form>
         {createMutation.isError && (
-          <p className="mt-2 text-sm text-red-600">Could not create product - check the values and try again.</p>
+          <p className="mt-2 text-sm text-red-600">
+            {errorMessage(createMutation.error, "Could not create product - check the values and try again.")}
+          </p>
         )}
       </div>
     </div>

@@ -9,5 +9,7 @@ public class Product
     public int BaseUnitOfMeasureId { get; set; }
     public UnitOfMeasure BaseUnitOfMeasure { get; set; } = default!;
 
+    public BatchTracking BatchTracking { get; set; } = BatchTracking.None;
+
     public ICollection<ProductUnitConversion> UnitConversions { get; set; } = new List<ProductUnitConversion>();
 }

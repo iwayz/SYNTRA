@@ -199,6 +199,13 @@ public class SalesOrdersController : ControllerBase
         var committedSoFar = new Dictionary<int, decimal>();
         var errors = new List<string>();
 
+        // Batch-tracked products are issued first-expiry-first-out from a working
+        // copy of the warehouse's batches that every line for the product shares,
+        // so later lines only see what earlier lines left.
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        var batchPools = new Dictionary<int, List<BatchStock>>();
+        var allocations = new Dictionary<int, IReadOnlyList<BatchAllocation>>();
+
         foreach (var line in order.Lines)
         {
             var product = await _tenantDb.Products.AsNoTracking()
@@ -217,6 +224,31 @@ public class SalesOrdersController : ControllerBase
             var baseQuantity = line.Quantity * factor;
             baseQuantities[line.SalesOrderLineId] = baseQuantity;
 
+            if (product.BatchTracking != BatchTracking.None)
+            {
+                if (!batchPools.TryGetValue(line.ProductId, out var pool))
+                {
+                    pool = await stock.BatchStockAsync(line.ProductId, order.WarehouseId);
+                    batchPools[line.ProductId] = pool;
+                }
+
+                var allocation = FefoAllocator.TryAllocate(baseQuantity, pool, today);
+                if (allocation is null)
+                {
+                    var expired = FefoAllocator.ExpiredQuantity(pool, today);
+                    errors.Add(
+                        $"Insufficient stock for product {line.ProductId} at warehouse {order.WarehouseId}: " +
+                        $"requested {Quantities.Format(baseQuantity)}, available {Quantities.Format(FefoAllocator.SellableQuantity(pool, today))}" +
+                        (expired > 0 ? $" (a further {Quantities.Format(expired)} is expired and cannot be sold)." : "."));
+                }
+                else
+                {
+                    allocations[line.SalesOrderLineId] = allocation;
+                }
+
+                continue;
+            }
+
             var currentBalance = await stock.OnHandAsync(line.ProductId, order.WarehouseId);
 
             var alreadyCommitted = committedSoFar.GetValueOrDefault(line.ProductId);
@@ -226,7 +258,7 @@ public class SalesOrdersController : ControllerBase
             {
                 errors.Add(
                     $"Insufficient stock for product {line.ProductId} at warehouse {order.WarehouseId}: " +
-                    $"requested {baseQuantity}, available {available}.");
+                    $"requested {Quantities.Format(baseQuantity)}, available {Quantities.Format(available)}.");
             }
 
             committedSoFar[line.ProductId] = alreadyCommitted + baseQuantity;
@@ -240,6 +272,23 @@ public class SalesOrdersController : ControllerBase
         // Pass 2: all lines passed - create every movement, no partial fulfillment.
         foreach (var line in order.Lines)
         {
+            if (allocations.TryGetValue(line.SalesOrderLineId, out var lineAllocations))
+            {
+                // One movement per batch the line was drawn from.
+                foreach (var allocation in lineAllocations)
+                {
+                    stock.Post(
+                        line.ProductId,
+                        order.WarehouseId,
+                        -allocation.Quantity,
+                        MovementType.Sale,
+                        order.SalesOrderId,
+                        batchId: allocation.BatchId);
+                }
+
+                continue;
+            }
+
             stock.Post(
                 line.ProductId,
                 order.WarehouseId,

@@ -17,6 +17,11 @@ public class StockMovement
     public decimal Quantity { get; set; }
     public MovementType MovementType { get; set; }
     public int? ReferenceId { get; set; }
+
+    // Set for movements of batch-tracked products, null otherwise.
+    public int? BatchId { get; set; }
+    public ProductBatch? Batch { get; set; }
+
     public DateTime OccurredAt { get; set; }
     public string? Notes { get; set; }
 }

@@ -27,7 +27,8 @@ import type {
   CreateProductRequest,
   CreateProductUnitConversionRequest,
   Product,
-  ProductUnitConversion
+  ProductUnitConversion,
+  SetBatchTrackingRequest
 } from '../syntraApiV1.schemas';
 
 import { customInstance } from '../../axiosInstance';
@@ -344,4 +345,66 @@ const {mutation: mutationOptions} = options ?
         TContext
       > => {
       return useMutation(getPostInventoryProductsIdUnitConversionsMutationOptions(options), queryClient);
+    }
+    export const putInventoryProductsIdBatchTracking = (
+    id: number,
+    setBatchTrackingRequest: SetBatchTrackingRequest,
+ signal?: AbortSignal
+) => {
+
+
+      return customInstance<Product>(
+      {url: `/inventory/products/${id}/batch-tracking`, method: 'PUT',
+      headers: {'Content-Type': 'application/json', },
+      data: setBatchTrackingRequest, signal
+    },
+      );
+    }
+
+
+
+
+export const getPutInventoryProductsIdBatchTrackingMutationKey = () => ['putInventoryProductsIdBatchTracking'] as const;
+
+export const getPutInventoryProductsIdBatchTrackingMutationOptions = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putInventoryProductsIdBatchTracking>>, TError,PutInventoryProductsIdBatchTrackingMutationVariables, TContext>, }
+): UseMutationOptions<Awaited<ReturnType<typeof putInventoryProductsIdBatchTracking>>, TError,PutInventoryProductsIdBatchTrackingMutationVariables, TContext> => {
+
+const mutationKey = getPutInventoryProductsIdBatchTrackingMutationKey();
+const {mutation: mutationOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof putInventoryProductsIdBatchTracking>>, PutInventoryProductsIdBatchTrackingMutationVariables> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  putInventoryProductsIdBatchTracking(id,data,)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PutInventoryProductsIdBatchTrackingMutationResult = NonNullable<Awaited<ReturnType<typeof putInventoryProductsIdBatchTracking>>>
+    export type PutInventoryProductsIdBatchTrackingMutationBody = SetBatchTrackingRequest
+    export type PutInventoryProductsIdBatchTrackingMutationError = unknown
+    export type PutInventoryProductsIdBatchTrackingMutationVariables = {id: number;data: SetBatchTrackingRequest}
+
+    export const usePutInventoryProductsIdBatchTracking = <TError = unknown,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof putInventoryProductsIdBatchTracking>>, TError,PutInventoryProductsIdBatchTrackingMutationVariables, TContext>, }
+ , queryClient?: QueryClient): UseMutationResult<
+        Awaited<ReturnType<typeof putInventoryProductsIdBatchTracking>>,
+        TError,
+        PutInventoryProductsIdBatchTrackingMutationVariables,
+        TContext
+      > => {
+      return useMutation(getPutInventoryProductsIdBatchTrackingMutationOptions(options), queryClient);
     }

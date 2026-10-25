@@ -66,6 +66,7 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserAccess, CurrentUserAccess>();
 builder.Services.AddScoped<IBranchScope, BranchScope>();
 builder.Services.AddScoped<IStockLedger, StockLedger>();
+builder.Services.AddScoped<IBatchResolver, BatchResolver>();
 builder.Services.AddScoped<IAuthorizationHandler, TenantAdminHandler>();
 
 builder.Services.AddAuthorization(options =>

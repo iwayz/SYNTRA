@@ -2,6 +2,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState, type FormEvent } from "react";
 import { Link, useParams } from "react-router-dom";
 import { errorMessage } from "../api/errors";
+import { getGetInventoryBatchesQueryKey } from "../api/generated/batches/batches";
 import {
   getGetPurchasingPurchaseOrdersIdQueryKey,
   useGetPurchasingPurchaseOrdersId,
@@ -14,7 +15,8 @@ import {
 import { getGetInventoryStockMovementsQueryKey } from "../api/generated/stock/stock";
 import { getGetInventoryStockBalanceQueryKey } from "../api/generated/stock/stock";
 import { StatusBadge } from "../components/StatusBadge";
-import { PurchaseOrderStatus } from "../api/generated/syntraApiV1.schemas";
+import { BatchTracking, PurchaseOrderStatus } from "../api/generated/syntraApiV1.schemas";
+import { isTracked } from "../lib/batchTracking";
 
 const inputClasses =
   "rounded-md border border-slate-300 px-2 py-1.5 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500";
@@ -26,12 +28,16 @@ export function PurchaseOrderDetailPage() {
 
   const orderQuery = useGetPurchasingPurchaseOrdersId(orderId);
 
-  // What the user typed per line / for the whole receipt. A line with nothing
-  // typed falls back to its outstanding quantity, so the form starts out as
-  // "everything that is still due arrived" and clearing it after a save just
-  // re-derives from the new outstanding amounts.
+  // What the user typed, per receipt entry. An entry is "<line id>:<n>"; entry 0
+  // is the line itself and further entries (n > 0) are extra batches of the same
+  // line in the same delivery. Entry 0 with nothing typed falls back to the
+  // line's outstanding quantity, so the form starts out as "everything still due
+  // arrived", and clearing it after a save just re-derives from the new amounts.
   const [quantities, setQuantities] = useState<Record<string, string>>({});
-  const [lineNotes, setLineNotes] = useState<Record<string, string>>({});
+  const [entryNotes, setEntryNotes] = useState<Record<string, string>>({});
+  const [batchNumbers, setBatchNumbers] = useState<Record<string, string>>({});
+  const [expiries, setExpiries] = useState<Record<string, string>>({});
+  const [extraEntries, setExtraEntries] = useState<Record<string, number>>({});
   const [receiptNotes, setReceiptNotes] = useState("");
 
   function invalidateOrder() {
@@ -41,6 +47,7 @@ export function PurchaseOrderDetailPage() {
   function invalidateStock() {
     queryClient.invalidateQueries({ queryKey: getGetInventoryStockMovementsQueryKey() });
     queryClient.invalidateQueries({ queryKey: getGetInventoryStockBalanceQueryKey() });
+    queryClient.invalidateQueries({ queryKey: getGetInventoryBatchesQueryKey() });
   }
 
   const confirmMutation = usePostPurchasingPurchaseOrdersIdConfirm({
@@ -60,7 +67,10 @@ export function PurchaseOrderDetailPage() {
     mutation: {
       onSuccess: () => {
         setQuantities({});
-        setLineNotes({});
+        setEntryNotes({});
+        setBatchNumbers({});
+        setExpiries({});
+        setExtraEntries({});
         setReceiptNotes("");
         invalidateOrder();
         invalidateStock();
@@ -90,22 +100,34 @@ export function PurchaseOrderDetailPage() {
     cancelMutation.isPending;
 
   const lines = order.lines ?? [];
-  const outstandingOf = (line: (typeof lines)[number]) => Number(line.quantity ?? 0) - Number(line.quantityReceived ?? 0);
+  type Line = (typeof lines)[number];
+
+  const outstandingOf = (line: Line) => Number(line.quantity ?? 0) - Number(line.quantityReceived ?? 0);
   const canReceive =
     order.status === PurchaseOrderStatus.Confirmed || order.status === PurchaseOrderStatus.PartiallyReceived;
   const hasReceipts = (order.goodsReceipts ?? []).length > 0;
+  const anyTracked = lines.some((line) => isTracked(line.product?.batchTracking));
 
-  function quantityFor(line: (typeof lines)[number]) {
-    return quantities[String(line.purchaseOrderLineId)] ?? String(outstandingOf(line));
+  const entryKeys = (line: Line) =>
+    Array.from({ length: 1 + (extraEntries[String(line.purchaseOrderLineId)] ?? 0) }, (_, n) => `${line.purchaseOrderLineId}:${n}`);
+
+  function quantityFor(line: Line, key: string) {
+    // Entry 0 defaults to what is still outstanding; extra entries start empty.
+    return quantities[key] ?? (key.endsWith(":0") ? String(outstandingOf(line)) : "0");
   }
 
-  const receiptLines = lines
-    .map((line) => ({
-      purchaseOrderLineId: Number(line.purchaseOrderLineId),
-      quantity: Number(quantityFor(line)),
-      notes: lineNotes[String(line.purchaseOrderLineId)]?.trim() || null,
-    }))
-    .filter((line) => line.quantity > 0);
+  const receiptLines = lines.flatMap((line) =>
+    entryKeys(line)
+      .map((key) => ({
+        purchaseOrderLineId: Number(line.purchaseOrderLineId),
+        quantity: Number(quantityFor(line, key)),
+        notes: entryNotes[key]?.trim() || null,
+        batchNumber: isTracked(line.product?.batchTracking) ? batchNumbers[key]?.trim() || null : null,
+        expiryDate:
+          line.product?.batchTracking === BatchTracking.BatchAndExpiry && expiries[key] ? expiries[key] : null,
+      }))
+      .filter((entry) => entry.quantity > 0),
+  );
 
   function handleReceipt(event: FormEvent) {
     event.preventDefault();
@@ -198,6 +220,13 @@ export function PurchaseOrderDetailPage() {
                       return (
                         <li key={receiptLine.goodsReceiptLineId}>
                           {receiptLine.quantity} {orderLine?.unitOfMeasure?.code} × {orderLine?.product?.name}
+                          {receiptLine.productBatch && (
+                            <span className="text-slate-500">
+                              {" "}
+                              · batch {receiptLine.productBatch.batchNumber}
+                              {receiptLine.productBatch.expiryDate && ` (expires ${receiptLine.productBatch.expiryDate})`}
+                            </span>
+                          )}
                           {receiptLine.notes && <span className="text-slate-500"> - {receiptLine.notes}</span>}
                         </li>
                       );
@@ -215,6 +244,7 @@ export function PurchaseOrderDetailPage() {
           <p className="mb-4 text-xs text-slate-400">
             Enter what actually arrived in this delivery. Leave a line at 0 to skip it; add a note for anything damaged
             or short.
+            {anyTracked && " Batch-tracked products need a batch number (and an expiry date for a new batch where required)."}
           </p>
           <form onSubmit={handleReceipt} className="space-y-4">
             <table className="w-full text-left text-sm">
@@ -223,25 +253,35 @@ export function PurchaseOrderDetailPage() {
                   <th className="pb-2 pr-4 font-medium">Product</th>
                   <th className="pb-2 pr-4 text-right font-medium">Outstanding</th>
                   <th className="pb-2 pr-4 font-medium">Receiving now</th>
+                  {anyTracked && <th className="pb-2 pr-4 font-medium">Batch</th>}
+                  {anyTracked && <th className="pb-2 pr-4 font-medium">Expiry</th>}
                   <th className="pb-2 font-medium">Note</th>
                 </tr>
               </thead>
               <tbody>
-                {lines.map((line) => {
-                  const key = String(line.purchaseOrderLineId);
-                  return (
+                {lines.flatMap((line) => {
+                  const mode = line.product?.batchTracking;
+                  const tracked = isTracked(mode);
+
+                  return entryKeys(line).map((key, n) => (
                     <tr key={key}>
                       <td className="py-1 pr-4 text-slate-700">
-                        {line.product?.name} <span className="text-slate-400">({line.unitOfMeasure?.code})</span>
+                        {n === 0 ? (
+                          <>
+                            {line.product?.name} <span className="text-slate-400">({line.unitOfMeasure?.code})</span>
+                          </>
+                        ) : (
+                          <span className="pl-4 text-slate-400">+ another batch</span>
+                        )}
                       </td>
-                      <td className="py-1 pr-4 text-right text-slate-700">{outstandingOf(line)}</td>
+                      <td className="py-1 pr-4 text-right text-slate-700">{n === 0 ? outstandingOf(line) : ""}</td>
                       <td className="py-1 pr-4">
                         <input
                           type="number"
                           step="any"
                           min="0"
                           max={outstandingOf(line)}
-                          value={quantityFor(line)}
+                          value={quantityFor(line, key)}
                           onChange={(e) => {
                             receiptMutation.reset();
                             setQuantities({ ...quantities, [key]: e.target.value });
@@ -249,16 +289,58 @@ export function PurchaseOrderDetailPage() {
                           className={`${inputClasses} w-28`}
                         />
                       </td>
+                      {anyTracked && (
+                        <td className="py-1 pr-4">
+                          {tracked && (
+                            <input
+                              value={batchNumbers[key] ?? ""}
+                              onChange={(e) => {
+                                receiptMutation.reset();
+                                setBatchNumbers({ ...batchNumbers, [key]: e.target.value });
+                              }}
+                              maxLength={50}
+                              placeholder="Batch no."
+                              className={`${inputClasses} w-32`}
+                            />
+                          )}
+                        </td>
+                      )}
+                      {anyTracked && (
+                        <td className="py-1 pr-4">
+                          {mode === BatchTracking.BatchAndExpiry && (
+                            <input
+                              type="date"
+                              value={expiries[key] ?? ""}
+                              onChange={(e) => setExpiries({ ...expiries, [key]: e.target.value })}
+                              className={inputClasses}
+                            />
+                          )}
+                        </td>
+                      )}
                       <td className="py-1">
                         <input
-                          value={lineNotes[key] ?? ""}
-                          onChange={(e) => setLineNotes({ ...lineNotes, [key]: e.target.value })}
+                          value={entryNotes[key] ?? ""}
+                          onChange={(e) => setEntryNotes({ ...entryNotes, [key]: e.target.value })}
                           maxLength={500}
-                          className={`${inputClasses} w-64`}
+                          className={`${inputClasses} w-56`}
                         />
+                        {tracked && n === entryKeys(line).length - 1 && (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExtraEntries({
+                                ...extraEntries,
+                                [String(line.purchaseOrderLineId)]: (extraEntries[String(line.purchaseOrderLineId)] ?? 0) + 1,
+                              })
+                            }
+                            className="ml-3 text-xs font-medium text-indigo-600 hover:underline"
+                          >
+                            Split into another batch
+                          </button>
+                        )}
                       </td>
                     </tr>
-                  );
+                  ));
                 })}
               </tbody>
             </table>
@@ -294,7 +376,7 @@ export function PurchaseOrderDetailPage() {
               Confirm
             </button>
           )}
-          {canReceive && (
+          {canReceive && !anyTracked && (
             <button
               onClick={() => receiveAllMutation.mutate({ id: orderId })}
               disabled={isPending}

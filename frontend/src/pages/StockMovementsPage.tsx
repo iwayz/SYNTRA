@@ -8,6 +8,9 @@ import {
   usePostInventoryStockAdjustments,
 } from "../api/generated/stock/stock";
 import { useGetInventoryProducts } from "../api/generated/products/products";
+import { getGetInventoryBatchesQueryKey, useGetInventoryBatches } from "../api/generated/batches/batches";
+import { BatchTracking } from "../api/generated/syntraApiV1.schemas";
+import { isTracked } from "../lib/batchTracking";
 import { useGetInventoryWarehouses } from "../api/generated/warehouses/warehouses";
 import { useBranch } from "../branch/BranchContext";
 
@@ -30,6 +33,15 @@ export function StockMovementsPage() {
   const [warehouseId, setWarehouseId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
+  const [batchNumber, setBatchNumber] = useState("");
+  const [expiryDate, setExpiryDate] = useState("");
+
+  const selectedProduct = productsQuery.data?.find((product) => String(product.productId) === productId);
+  const tracked = isTracked(selectedProduct?.batchTracking);
+  const batchesQuery = useGetInventoryBatches(
+    { productId: Number(productId) },
+    { query: { enabled: tracked } },
+  );
 
   // Warehouses shown depend on the header's branch, so a previously picked one may no longer exist.
   useEffect(() => {
@@ -44,6 +56,9 @@ export function StockMovementsPage() {
         setWarehouseId("");
         setQuantity("");
         setNotes("");
+        setBatchNumber("");
+        setExpiryDate("");
+        queryClient.invalidateQueries({ queryKey: getGetInventoryBatchesQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetInventoryStockMovementsQueryKey() });
         queryClient.invalidateQueries({ queryKey: getGetInventoryStockBalanceQueryKey() });
       },
@@ -58,6 +73,8 @@ export function StockMovementsPage() {
         warehouseId: Number(warehouseId),
         quantity: Number(quantity),
         notes,
+        batchNumber: tracked ? batchNumber.trim() : null,
+        expiryDate: tracked && expiryDate ? expiryDate : null,
       },
     });
   }
@@ -101,6 +118,7 @@ export function StockMovementsPage() {
               <th className="pb-2 pr-4 font-medium">Product</th>
               <th className="pb-2 pr-4 font-medium">Branch</th>
               <th className="pb-2 pr-4 font-medium">Warehouse</th>
+              <th className="pb-2 pr-4 font-medium">Batch</th>
               <th className="pb-2 pr-4 font-medium">Type</th>
               <th className="pb-2 pr-4 text-right font-medium">Quantity</th>
               <th className="pb-2 pl-4 font-medium">Notes</th>
@@ -115,6 +133,7 @@ export function StockMovementsPage() {
                 <td className="py-2 pr-4 text-slate-700">{movement.product?.name}</td>
                 <td className="py-2 pr-4 text-slate-700">{branchName(movement.warehouse?.branchId)}</td>
                 <td className="py-2 pr-4 text-slate-700">{movement.warehouse?.name}</td>
+                <td className="py-2 pr-4 text-slate-700">{movement.batch?.batchNumber ?? <span className="text-slate-400">-</span>}</td>
                 <td className="py-2 pr-4 text-slate-700">{movement.movementType}</td>
                 <td
                   className={`py-2 pr-4 text-right font-medium ${
@@ -128,7 +147,7 @@ export function StockMovementsPage() {
             ))}
             {movementsQuery.data?.length === 0 && (
               <tr>
-                <td colSpan={7} className="py-4 text-slate-400">
+                <td colSpan={8} className="py-4 text-slate-400">
                   No movements match these filters.
                 </td>
               </tr>
@@ -180,6 +199,39 @@ export function StockMovementsPage() {
               })}
             </select>
           </div>
+          {tracked && (
+            <>
+              <div>
+                <label className="mb-1 block text-sm font-medium text-slate-700">Batch</label>
+                <input
+                  value={batchNumber}
+                  onChange={(e) => setBatchNumber(e.target.value)}
+                  list="adjustment-batches"
+                  required
+                  maxLength={50}
+                  className="w-40 rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                />
+                <datalist id="adjustment-batches">
+                  {batchesQuery.data?.map((batch) => (
+                    <option key={batch.productBatchId} value={batch.batchNumber} />
+                  ))}
+                </datalist>
+              </div>
+              {selectedProduct?.batchTracking === BatchTracking.BatchAndExpiry && Number(quantity) > 0 && (
+                <div>
+                  <label className="mb-1 block text-sm font-medium text-slate-700">
+                    Expiry <span className="font-normal text-slate-400">(new batch)</span>
+                  </label>
+                  <input
+                    type="date"
+                    value={expiryDate}
+                    onChange={(e) => setExpiryDate(e.target.value)}
+                    className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                </div>
+              )}
+            </>
+          )}
           <div>
             <label className="mb-1 block text-sm font-medium text-slate-700">
               Quantity <span className="font-normal text-slate-400">(negative to reduce)</span>

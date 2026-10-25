@@ -16,5 +16,9 @@ public class GoodsReceiptLine
     public decimal Quantity { get; set; }
     public string? Notes { get; set; }
 
+    // Set when the product is batch-tracked.
+    public int? ProductBatchId { get; set; }
+    public ProductBatch? ProductBatch { get; set; }
+
     public StockMovement StockMovement { get; set; } = default!;
 }

@@ -79,7 +79,7 @@ To regenerate the frontend's API client after a backend endpoint changes: `npm r
 
 **Phase 3 (full inventory ops) — in progress.**
 - [x] 3a — safe stock writes and goods receipts: every stock check-then-write now goes through one `StockLedger` that holds a per-product, per-warehouse lock (fixes a real race where concurrent sales confirms could oversell, or confirm the same order twice); order status is a concurrency token so conflicting changes return 409; manual adjustments can no longer take stock below zero; goods receipts allow partial deliveries with per-line notes, POs gain a `PartiallyReceived` status and per-line received/outstanding quantities, and a partially received order can be closed when the rest will not arrive
-- [ ] 3b — batch tracking (per-product opt-in, expiry, FEFO)
+- [x] 3b — batch tracking: per-product mode (not tracked / by batch / by batch + expiry); `ProductBatch` and a batch on every movement of a tracked product; goods receipts and manual adjustments capture batch (and expiry for new batches), one PO line can be split across batches; sales issue first-expiry-first-out and never sell expired batches; switching tracking on moves existing stock into an `OPENING` batch (one-way); balances, movements and the product screen show batches with expired / expiring-soon highlighting; admins can correct a batch expiry
 - [ ] 3c — transfers between warehouses (two-step, with in-transit)
 - [ ] 3d — stock opname
 - [ ] 3e — returns

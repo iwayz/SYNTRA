@@ -22,6 +22,7 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
 
     public DbSet<UnitOfMeasure> UnitOfMeasures => Set<UnitOfMeasure>();
     public DbSet<Product> Products => Set<Product>();
+    public DbSet<ProductBatch> ProductBatches => Set<ProductBatch>();
     public DbSet<ProductUnitConversion> ProductUnitConversions => Set<ProductUnitConversion>();
     public DbSet<Branch> Branches => Set<Branch>();
     public DbSet<UserBranch> UserBranches => Set<UserBranch>();
@@ -95,6 +96,22 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
                 .WithMany()
                 .HasForeignKey(p => p.BaseUnitOfMeasureId)
                 .OnDelete(DeleteBehavior.Restrict);
+            e.Property(p => p.BatchTracking)
+                .HasConversion<string>()
+                .HasMaxLength(20)
+                .HasDefaultValue(BatchTracking.None);
+        });
+
+        modelBuilder.Entity<ProductBatch>(e =>
+        {
+            // The database's default collation is case-insensitive, so this also
+            // makes "ab1" and "AB1" the same batch.
+            e.HasIndex(b => new { b.ProductId, b.BatchNumber }).IsUnique();
+            e.Property(b => b.BatchNumber).HasMaxLength(50);
+            e.HasOne<Product>()
+                .WithMany()
+                .HasForeignKey(b => b.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<ProductUnitConversion>(e =>
@@ -112,7 +129,11 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
 
         modelBuilder.Entity<StockMovement>(e =>
         {
-            e.HasIndex(m => new { m.ProductId, m.WarehouseId });
+            e.HasIndex(m => new { m.ProductId, m.WarehouseId, m.BatchId });
+            e.HasOne(m => m.Batch)
+                .WithMany()
+                .HasForeignKey(m => m.BatchId)
+                .OnDelete(DeleteBehavior.Restrict);
             e.Property(m => m.MovementType).HasConversion<string>().HasMaxLength(20);
             e.Property(m => m.Quantity).HasPrecision(18, 4);
             e.HasOne(m => m.Product)
@@ -161,6 +182,10 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
             e.HasOne(l => l.StockMovement)
                 .WithMany()
                 .HasForeignKey("StockMovementId")
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.ProductBatch)
+                .WithMany()
+                .HasForeignKey(l => l.ProductBatchId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

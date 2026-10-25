@@ -4,6 +4,15 @@
  * Syntra.Api | v1
  * OpenAPI spec version: 1.0.0
  */
+export type BatchTracking = typeof BatchTracking[keyof typeof BatchTracking];
+
+
+export const BatchTracking = {
+  None: 'None',
+  Batch: 'Batch',
+  BatchAndExpiry: 'BatchAndExpiry',
+} as const;
+
 export interface Branch {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   branchId?: number | string;
@@ -33,6 +42,10 @@ export interface GoodsReceiptLineRequest {
   quantity: number | string;
   /** @nullable */
   notes: string | null;
+  /** @nullable */
+  batchNumber?: string | null;
+  /** @nullable */
+  expiryDate?: string | null;
 }
 
 export interface CreateGoodsReceiptRequest {
@@ -48,6 +61,7 @@ export interface CreateProductRequest {
   name: string;
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   baseUnitOfMeasureId: number | string;
+  batchTracking?: BatchTracking;
 }
 
 export interface CreateProductUnitConversionRequest {
@@ -105,6 +119,10 @@ export interface CreateStockAdjustmentRequest {
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   quantity: number | string;
   notes: string;
+  /** @nullable */
+  batchNumber?: string | null;
+  /** @nullable */
+  expiryDate?: string | null;
 }
 
 export interface CreateSupplierRequest {
@@ -136,6 +154,17 @@ export interface Customer {
   name?: string;
 }
 
+export interface ProductBatch {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productBatchId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  batchNumber?: string;
+  /** @nullable */
+  expiryDate?: string | null;
+  createdAt?: string;
+}
+
 export interface UnitOfMeasure {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   unitOfMeasureId?: number | string;
@@ -164,6 +193,7 @@ export interface Product {
   /** @pattern ^-?(?:0|[1-9]\d*)$ */
   baseUnitOfMeasureId?: number | string;
   baseUnitOfMeasure?: UnitOfMeasure;
+  batchTracking?: BatchTracking;
   unitConversions?: ProductUnitConversion[];
 }
 
@@ -202,6 +232,12 @@ export interface StockMovement {
      * @pattern ^-?(?:0|[1-9]\d*)$
      */
   referenceId?: number | string | null;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  batchId?: number | string | null;
+  batch?: null | ProductBatch;
   occurredAt?: string;
   /** @nullable */
   notes?: string | null;
@@ -218,6 +254,12 @@ export interface GoodsReceiptLine {
   quantity?: number | string;
   /** @nullable */
   notes?: string | null;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  productBatchId?: number | string | null;
+  productBatch?: null | ProductBatch;
   stockMovement?: StockMovement;
 }
 
@@ -368,6 +410,10 @@ export interface SalesOrder {
   lines?: SalesOrderLine[];
 }
 
+export interface SetBatchTrackingRequest {
+  mode: BatchTracking;
+}
+
 export interface SetUserActiveRequest {
   isActive: boolean;
 }
@@ -394,6 +440,19 @@ export interface StockBalance {
   branchName: string;
   /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
   quantityOnHand: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  batchId: number | string | null;
+  /** @nullable */
+  batchNumber: string | null;
+  /** @nullable */
+  expiryDate: string | null;
+}
+
+export interface UpdateBatchExpiryRequest {
+  expiryDate: string;
 }
 
 export interface UpdateBranchRequest {
@@ -434,6 +493,13 @@ export type GetPurchasingPurchaseOrdersParams = {
  * @pattern ^-?(?:0|[1-9]\d*)$
  */
 branchId?: number | string;
+};
+
+export type GetInventoryBatchesParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+productId?: number | string;
 };
 
 export type GetInventoryStockMovementsParams = {

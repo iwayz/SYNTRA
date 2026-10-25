@@ -136,6 +136,13 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Property<int>("BaseUnitOfMeasureId")
                         .HasColumnType("int");
 
+                    b.Property<string>("BatchTracking")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("None");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
@@ -152,6 +159,36 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .IsUnique();
 
                     b.ToTable("Products");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.ProductBatch", b =>
+                {
+                    b.Property<int>("ProductBatchId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProductBatchId"));
+
+                    b.Property<string>("BatchNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateOnly?>("ExpiryDate")
+                        .HasColumnType("date");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.HasKey("ProductBatchId");
+
+                    b.HasIndex("ProductId", "BatchNumber")
+                        .IsUnique();
+
+                    b.ToTable("ProductBatches");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Inventory.ProductUnitConversion", b =>
@@ -190,6 +227,9 @@ namespace Syntra.Infrastructure.TenantData.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockMovementId"));
 
+                    b.Property<int?>("BatchId")
+                        .HasColumnType("int");
+
                     b.Property<string>("MovementType")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -216,9 +256,11 @@ namespace Syntra.Infrastructure.TenantData.Migrations
 
                     b.HasKey("StockMovementId");
 
+                    b.HasIndex("BatchId");
+
                     b.HasIndex("WarehouseId");
 
-                    b.HasIndex("ProductId", "WarehouseId");
+                    b.HasIndex("ProductId", "WarehouseId", "BatchId");
 
                     b.ToTable("StockMovements");
                 });
@@ -309,6 +351,9 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
 
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
                     b.Property<int>("PurchaseOrderLineId")
                         .HasColumnType("int");
 
@@ -322,6 +367,8 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.HasKey("GoodsReceiptLineId");
 
                     b.HasIndex("GoodsReceiptId");
+
+                    b.HasIndex("ProductBatchId");
 
                     b.HasIndex("PurchaseOrderLineId");
 
@@ -745,6 +792,15 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("BaseUnitOfMeasure");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Inventory.ProductBatch", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.Product", null)
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("Syntra.Domain.Inventory.ProductUnitConversion", b =>
                 {
                     b.HasOne("Syntra.Domain.Inventory.Product", "Product")
@@ -766,6 +822,11 @@ namespace Syntra.Infrastructure.TenantData.Migrations
 
             modelBuilder.Entity("Syntra.Domain.Inventory.StockMovement", b =>
                 {
+                    b.HasOne("Syntra.Domain.Inventory.ProductBatch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("BatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Syntra.Domain.Inventory.Product", "Product")
                         .WithMany()
                         .HasForeignKey("ProductId")
@@ -777,6 +838,8 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasForeignKey("WarehouseId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Batch");
 
                     b.Navigation("Product");
 
@@ -811,6 +874,11 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("Syntra.Domain.Inventory.ProductBatch", "ProductBatch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("Syntra.Domain.Purchasing.PurchaseOrderLine", null)
                         .WithMany()
                         .HasForeignKey("PurchaseOrderLineId")
@@ -822,6 +890,8 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                         .HasForeignKey("StockMovementId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ProductBatch");
 
                     b.Navigation("StockMovement");
                 });

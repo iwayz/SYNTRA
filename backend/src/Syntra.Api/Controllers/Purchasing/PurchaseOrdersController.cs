@@ -40,7 +40,12 @@ public class CreatePurchaseOrderRequestValidator : AbstractValidator<CreatePurch
     }
 }
 
-public record GoodsReceiptLineRequest(int PurchaseOrderLineId, decimal Quantity, string? Notes);
+public record GoodsReceiptLineRequest(
+    int PurchaseOrderLineId,
+    decimal Quantity,
+    string? Notes,
+    string? BatchNumber = null,
+    DateOnly? ExpiryDate = null);
 
 public record CreateGoodsReceiptRequest(DateTime? ReceiptDate, string? Notes, List<GoodsReceiptLineRequest> Lines);
 
@@ -51,6 +56,7 @@ public class GoodsReceiptLineRequestValidator : AbstractValidator<GoodsReceiptLi
         RuleFor(x => x.PurchaseOrderLineId).GreaterThan(0);
         RuleFor(x => x.Quantity).GreaterThan(0);
         RuleFor(x => x.Notes).MaximumLength(500);
+        RuleFor(x => x.BatchNumber).MaximumLength(BatchResolver.MaxBatchNumberLength);
     }
 }
 
@@ -73,17 +79,20 @@ public class PurchaseOrdersController : ControllerBase
     private readonly ICurrentUserAccess _userAccess;
     private readonly IBranchScope _branchScope;
     private readonly IStockLedger _stockLedger;
+    private readonly IBatchResolver _batchResolver;
 
     public PurchaseOrdersController(
         TenantDbContext tenantDb,
         ICurrentUserAccess userAccess,
         IBranchScope branchScope,
-        IStockLedger stockLedger)
+        IStockLedger stockLedger,
+        IBatchResolver batchResolver)
     {
         _tenantDb = tenantDb;
         _userAccess = userAccess;
         _branchScope = branchScope;
         _stockLedger = stockLedger;
+        _batchResolver = batchResolver;
     }
 
     [HttpGet]
@@ -111,7 +120,7 @@ public class PurchaseOrdersController : ControllerBase
             .Include(o => o.Warehouse)
             .Include(o => o.Lines).ThenInclude(l => l.Product)
             .Include(o => o.Lines).ThenInclude(l => l.UnitOfMeasure)
-            .Include(o => o.GoodsReceipts).ThenInclude(r => r.Lines)
+            .Include(o => o.GoodsReceipts).ThenInclude(r => r.Lines).ThenInclude(l => l.ProductBatch)
             .FirstOrDefaultAsync(o => o.PurchaseOrderId == id);
 
         return order is null ? NotFound() : Ok(order);
@@ -318,9 +327,18 @@ public class PurchaseOrdersController : ControllerBase
             return (ValidationProblem("Nothing is outstanding on this purchase order."), null, null);
         }
 
-        if (wanted.Select(w => w.PurchaseOrderLineId).Distinct().Count() != wanted.Count)
+        // A line can appear more than once only when each entry names a different
+        // batch (one delivery of one product that spans several lots).
+        var distinctEntries = wanted
+            .Select(w => (w.PurchaseOrderLineId, Batch: (w.BatchNumber ?? string.Empty).Trim().ToUpperInvariant()))
+            .Distinct()
+            .Count();
+
+        if (distinctEntries != wanted.Count)
         {
-            return (ValidationProblem("Each purchase order line can appear only once per goods receipt."), null, null);
+            return (ValidationProblem(
+                "Each purchase order line can appear only once per goods receipt (once per batch for batch-tracked products)."),
+                null, null);
         }
 
         var receiptLines = new List<GoodsReceiptLine>();
@@ -337,12 +355,27 @@ public class PurchaseOrdersController : ControllerBase
             if (want.Quantity > outstanding)
             {
                 return (ValidationProblem(
-                    $"Line {line.PurchaseOrderLineId}: cannot receive {want.Quantity}, only {outstanding} is outstanding."),
+                    $"Line {line.PurchaseOrderLineId}: cannot receive {Quantities.Format(want.Quantity)}, only {Quantities.Format(outstanding)} is outstanding."),
                     null, null);
             }
 
             var product = await _tenantDb.Products.AsNoTracking()
                 .FirstOrDefaultAsync(p => p.ProductId == line.ProductId);
+
+            // "Receive all outstanding" has nowhere to say which batch arrived.
+            if (request is null && product!.BatchTracking != BatchTracking.None)
+            {
+                return (ValidationProblem(
+                    $"Product '{product.Name}' is batch-tracked, so its goods must be received with a batch " +
+                    "number through a goods receipt rather than 'receive all'."),
+                    null, null);
+            }
+
+            var (batch, batchError) = await _batchResolver.ResolveForStockInAsync(product!, want.BatchNumber, want.ExpiryDate);
+            if (batchError is not null)
+            {
+                return (ValidationProblem(batchError), null, null);
+            }
 
             var factor = 1m;
 
@@ -359,7 +392,8 @@ public class PurchaseOrdersController : ControllerBase
                 order.WarehouseId,
                 want.Quantity * factor,
                 MovementType.Purchase,
-                order.PurchaseOrderId);
+                order.PurchaseOrderId,
+                batch: batch);
 
             line.QuantityReceived += want.Quantity;
 
@@ -368,6 +402,7 @@ public class PurchaseOrdersController : ControllerBase
                 PurchaseOrderLineId = line.PurchaseOrderLineId,
                 Quantity = want.Quantity,
                 Notes = want.Notes,
+                ProductBatch = batch,
                 StockMovement = movement
             });
         }

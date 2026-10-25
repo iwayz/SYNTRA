@@ -99,13 +99,47 @@ public sealed class StockTransaction : IAsyncDisposable
             .Where(m => m.ProductId == productId && m.WarehouseId == warehouseId)
             .SumAsync(m => m.Quantity);
 
+    // Quantity of one batch in one warehouse (committed movements only).
+    public async Task<decimal> OnHandInBatchAsync(int productId, int warehouseId, int batchId) =>
+        await _tenantDb.StockMovements.AsNoTracking()
+            .Where(m => m.ProductId == productId && m.WarehouseId == warehouseId && m.BatchId == batchId)
+            .SumAsync(m => m.Quantity);
+
+    // The batches of a product that currently hold stock in a warehouse, as a
+    // working copy for FEFO allocation.
+    public async Task<List<BatchStock>> BatchStockAsync(int productId, int warehouseId)
+    {
+        var rows = await _tenantDb.StockMovements.AsNoTracking()
+            .Where(m => m.ProductId == productId && m.WarehouseId == warehouseId && m.BatchId != null)
+            .GroupBy(m => m.BatchId!.Value)
+            .Select(g => new { BatchId = g.Key, Quantity = g.Sum(m => m.Quantity) })
+            .Where(x => x.Quantity > 0)
+            .ToListAsync();
+
+        var ids = rows.Select(r => r.BatchId).ToList();
+
+        var batches = await _tenantDb.ProductBatches.AsNoTracking()
+            .Where(b => ids.Contains(b.ProductBatchId))
+            .ToDictionaryAsync(b => b.ProductBatchId);
+
+        return rows.Select(r => new BatchStock
+        {
+            BatchId = r.BatchId,
+            ExpiryDate = batches[r.BatchId].ExpiryDate,
+            CreatedAt = batches[r.BatchId].CreatedAt,
+            Remaining = r.Quantity
+        }).ToList();
+    }
+
     public StockMovement Post(
         int productId,
         int warehouseId,
         decimal quantity,
         MovementType movementType,
         int? referenceId,
-        string? notes = null)
+        string? notes = null,
+        int? batchId = null,
+        ProductBatch? batch = null)
     {
         var movement = new StockMovement
         {
@@ -114,6 +148,8 @@ public sealed class StockTransaction : IAsyncDisposable
             Quantity = quantity,
             MovementType = movementType,
             ReferenceId = referenceId,
+            BatchId = batchId,
+            Batch = batch,
             OccurredAt = DateTime.UtcNow,
             Notes = notes
         };
