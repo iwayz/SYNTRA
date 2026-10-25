@@ -6,6 +6,7 @@ export * from './products/products';
 export * from './purchase-orders/purchase-orders';
 export * from './sales-orders/sales-orders';
 export * from './stock/stock';
+export * from './stock-transfers/stock-transfers';
 export * from './suppliers/suppliers';
 export * from './unit-of-measures/unit-of-measures';
 export * from './users/users';

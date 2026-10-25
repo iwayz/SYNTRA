@@ -50,6 +50,9 @@ function ShellLayout() {
             <NavLink to="/stock-movements" className={navLinkClasses}>
               Stock Movements
             </NavLink>
+            <NavLink to="/transfers" className={navLinkClasses}>
+              Transfers
+            </NavLink>
             <NavLink to="/purchase-orders" className={navLinkClasses}>
               Purchase Orders
             </NavLink>

@@ -18,6 +18,9 @@ import { SalesOrdersPage } from "./pages/SalesOrdersPage";
 import { StockBalancePage } from "./pages/StockBalancePage";
 import { StockMovementsPage } from "./pages/StockMovementsPage";
 import { SuppliersPage } from "./pages/SuppliersPage";
+import { TransferCreatePage } from "./pages/TransferCreatePage";
+import { TransferDetailPage } from "./pages/TransferDetailPage";
+import { TransfersPage } from "./pages/TransfersPage";
 import { UnitsOfMeasurePage } from "./pages/UnitsOfMeasurePage";
 import { UsersPage } from "./pages/UsersPage";
 import { WarehousesPage } from "./pages/WarehousesPage";
@@ -40,6 +43,9 @@ function App() {
           <Route path="/purchase-orders" element={<PurchaseOrdersPage />} />
           <Route path="/purchase-orders/new" element={<PurchaseOrderCreatePage />} />
           <Route path="/purchase-orders/:id" element={<PurchaseOrderDetailPage />} />
+          <Route path="/transfers" element={<TransfersPage />} />
+          <Route path="/transfers/new" element={<TransferCreatePage />} />
+          <Route path="/transfers/:id" element={<TransferDetailPage />} />
           <Route path="/sales-orders" element={<SalesOrdersPage />} />
           <Route path="/sales-orders/new" element={<SalesOrderCreatePage />} />
           <Route path="/sales-orders/:id" element={<SalesOrderDetailPage />} />

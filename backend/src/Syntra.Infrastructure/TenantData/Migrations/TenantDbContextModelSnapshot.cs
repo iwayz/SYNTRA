@@ -265,6 +265,116 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.ToTable("StockMovements");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransfer", b =>
+                {
+                    b.Property<int>("StockTransferId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockTransferId"));
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DispatchedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("FromWarehouseId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Status")
+                        .IsConcurrencyToken()
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("ToWarehouseId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StockTransferId");
+
+                    b.HasIndex("FromWarehouseId");
+
+                    b.HasIndex("ToWarehouseId");
+
+                    b.ToTable("StockTransfers");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransferAllocation", b =>
+                {
+                    b.Property<int>("StockTransferAllocationId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockTransferAllocationId"));
+
+                    b.Property<int>("DispatchMovementId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ProductBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<decimal>("QuantityReceived")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("StockTransferLineId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StockTransferAllocationId");
+
+                    b.HasIndex("DispatchMovementId");
+
+                    b.HasIndex("ProductBatchId");
+
+                    b.HasIndex("StockTransferLineId");
+
+                    b.ToTable("StockTransferAllocations");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransferLine", b =>
+                {
+                    b.Property<int>("StockTransferLineId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StockTransferLineId"));
+
+                    b.Property<int?>("PinnedBatchId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("Quantity")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("decimal(18,4)");
+
+                    b.Property<int>("StockTransferId")
+                        .HasColumnType("int");
+
+                    b.HasKey("StockTransferLineId");
+
+                    b.HasIndex("PinnedBatchId");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("StockTransferId");
+
+                    b.ToTable("StockTransferLines");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Inventory.UnitOfMeasure", b =>
                 {
                     b.Property<int>("UnitOfMeasureId")
@@ -846,6 +956,73 @@ namespace Syntra.Infrastructure.TenantData.Migrations
                     b.Navigation("Warehouse");
                 });
 
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransfer", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.Warehouse", "FromWarehouse")
+                        .WithMany()
+                        .HasForeignKey("FromWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.Warehouse", "ToWarehouse")
+                        .WithMany()
+                        .HasForeignKey("ToWarehouseId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("FromWarehouse");
+
+                    b.Navigation("ToWarehouse");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransferAllocation", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.StockMovement", "DispatchMovement")
+                        .WithMany()
+                        .HasForeignKey("DispatchMovementId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.ProductBatch", "Batch")
+                        .WithMany()
+                        .HasForeignKey("ProductBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Syntra.Domain.Inventory.StockTransferLine", null)
+                        .WithMany("Allocations")
+                        .HasForeignKey("StockTransferLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Batch");
+
+                    b.Navigation("DispatchMovement");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransferLine", b =>
+                {
+                    b.HasOne("Syntra.Domain.Inventory.ProductBatch", "PinnedBatch")
+                        .WithMany()
+                        .HasForeignKey("PinnedBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("Syntra.Domain.Inventory.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("Syntra.Domain.Inventory.StockTransfer", null)
+                        .WithMany("Lines")
+                        .HasForeignKey("StockTransferId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("PinnedBatch");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Syntra.Domain.Inventory.Warehouse", b =>
                 {
                     b.HasOne("Syntra.Domain.Tenancy.Branch", "Branch")
@@ -1006,6 +1183,16 @@ namespace Syntra.Infrastructure.TenantData.Migrations
             modelBuilder.Entity("Syntra.Domain.Inventory.Product", b =>
                 {
                     b.Navigation("UnitConversions");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransfer", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("Syntra.Domain.Inventory.StockTransferLine", b =>
+                {
+                    b.Navigation("Allocations");
                 });
 
             modelBuilder.Entity("Syntra.Domain.Purchasing.GoodsReceipt", b =>

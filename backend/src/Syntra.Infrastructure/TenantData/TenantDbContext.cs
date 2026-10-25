@@ -30,6 +30,9 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
     public DbSet<Customer> Customers => Set<Customer>();
     public DbSet<Supplier> Suppliers => Set<Supplier>();
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
+    public DbSet<StockTransfer> StockTransfers => Set<StockTransfer>();
+    public DbSet<StockTransferLine> StockTransferLines => Set<StockTransferLine>();
+    public DbSet<StockTransferAllocation> StockTransferAllocations => Set<StockTransferAllocation>();
     public DbSet<PurchaseOrder> PurchaseOrders => Set<PurchaseOrder>();
     public DbSet<PurchaseOrderLine> PurchaseOrderLines => Set<PurchaseOrderLine>();
     public DbSet<GoodsReceipt> GoodsReceipts => Set<GoodsReceipt>();
@@ -156,6 +159,55 @@ public class TenantDbContext : IdentityDbContext<TenantUser, TenantRole, int>
             e.HasOne(o => o.Warehouse)
                 .WithMany()
                 .HasForeignKey(o => o.WarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StockTransfer>(e =>
+        {
+            // A concurrency token, like order statuses: a recall (cancel) racing a
+            // receive can't both win - the second save fails and rolls back.
+            e.Property(t => t.Status).HasConversion<string>().HasMaxLength(20).IsConcurrencyToken();
+            e.Property(t => t.Notes).HasMaxLength(500);
+            e.HasOne(t => t.FromWarehouse)
+                .WithMany()
+                .HasForeignKey(t => t.FromWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(t => t.ToWarehouse)
+                .WithMany()
+                .HasForeignKey(t => t.ToWarehouseId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StockTransferLine>(e =>
+        {
+            e.Property(l => l.Quantity).HasPrecision(18, 4);
+            e.HasOne<StockTransfer>()
+                .WithMany(t => t.Lines)
+                .HasForeignKey(l => l.StockTransferId);
+            e.HasOne(l => l.Product)
+                .WithMany()
+                .HasForeignKey(l => l.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(l => l.PinnedBatch)
+                .WithMany()
+                .HasForeignKey(l => l.PinnedBatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<StockTransferAllocation>(e =>
+        {
+            e.Property(a => a.Quantity).HasPrecision(18, 4);
+            e.Property(a => a.QuantityReceived).HasPrecision(18, 4);
+            e.HasOne<StockTransferLine>()
+                .WithMany(l => l.Allocations)
+                .HasForeignKey(a => a.StockTransferLineId);
+            e.HasOne(a => a.Batch)
+                .WithMany()
+                .HasForeignKey(a => a.ProductBatchId)
+                .OnDelete(DeleteBehavior.Restrict);
+            e.HasOne(a => a.DispatchMovement)
+                .WithMany()
+                .HasForeignKey("DispatchMovementId")
                 .OnDelete(DeleteBehavior.Restrict);
         });
 

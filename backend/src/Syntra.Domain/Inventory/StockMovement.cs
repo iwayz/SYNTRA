@@ -3,7 +3,8 @@ namespace Syntra.Domain.Inventory;
 // Quantity is always signed, in the product's base unit: positive = stock in,
 // negative = stock out. MovementType is the reporting classification and
 // also determines what ReferenceId points to (Purchase -> PurchaseOrderId,
-// Sale -> SalesOrderId, ManualAdjustment -> null).
+// Sale -> SalesOrderId, ManualAdjustment -> null, TransferOut / TransferIn /
+// TransferReversal -> StockTransferId).
 public class StockMovement
 {
     public int StockMovementId { get; set; }

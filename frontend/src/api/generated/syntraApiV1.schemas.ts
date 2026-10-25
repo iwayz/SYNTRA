@@ -129,6 +129,25 @@ export interface CreateSupplierRequest {
   name: string;
 }
 
+export interface CreateTransferLineRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity: number | string;
+  /** @nullable */
+  batchNumber?: string | null;
+}
+
+export interface CreateTransferRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  fromWarehouseId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  toWarehouseId: number | string;
+  /** @nullable */
+  notes: string | null;
+  lines: CreateTransferLineRequest[];
+}
+
 export interface CreateUnitOfMeasureRequest {
   code: string;
   name: string;
@@ -213,6 +232,9 @@ export const MovementType = {
   Purchase: 'Purchase',
   Sale: 'Sale',
   ManualAdjustment: 'ManualAdjustment',
+  TransferOut: 'TransferOut',
+  TransferIn: 'TransferIn',
+  TransferReversal: 'TransferReversal',
 } as const;
 
 export interface StockMovement {
@@ -365,6 +387,17 @@ export interface PurchaseOrder {
   goodsReceipts?: GoodsReceipt[];
 }
 
+export interface ReceiveTransferLineRequest {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferAllocationId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity: number | string;
+}
+
+export interface ReceiveTransferRequest {
+  lines: ReceiveTransferLineRequest[];
+}
+
 export interface ResetUserPasswordRequest {
   newPassword: string;
 }
@@ -451,6 +484,109 @@ export interface StockBalance {
   expiryDate: string | null;
 }
 
+export interface StockInTransit {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferId: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId: number | string;
+  productSku: string;
+  productName: string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  batchId: number | string | null;
+  /** @nullable */
+  batchNumber: string | null;
+  /** @nullable */
+  expiryDate: string | null;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  fromWarehouseId: number | string;
+  fromWarehouseName: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  toWarehouseId: number | string;
+  toWarehouseName: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity: number | string;
+}
+
+export type StockTransferStatus = typeof StockTransferStatus[keyof typeof StockTransferStatus];
+
+
+export const StockTransferStatus = {
+  Draft: 'Draft',
+  InTransit: 'InTransit',
+  PartiallyReceived: 'PartiallyReceived',
+  Received: 'Received',
+  Cancelled: 'Cancelled',
+} as const;
+
+export interface StockTransferAllocation {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferAllocationId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferLineId?: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  productBatchId?: number | string | null;
+  batch?: null | ProductBatch;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantityReceived?: number | string;
+  dispatchMovement?: StockMovement;
+}
+
+export interface StockTransferLine {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferLineId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  productId?: number | string;
+  product?: Product;
+  /** @pattern ^-?(?:0|[1-9]\d*)(?:\.\d+)?$ */
+  quantity?: number | string;
+  /**
+     * @nullable
+     * @pattern ^-?(?:0|[1-9]\d*)$
+     */
+  pinnedBatchId?: number | string | null;
+  pinnedBatch?: null | ProductBatch;
+  allocations?: StockTransferAllocation[];
+}
+
+export interface StockTransfer {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  stockTransferId?: number | string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  fromWarehouseId?: number | string;
+  fromWarehouse?: Warehouse;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  toWarehouseId?: number | string;
+  toWarehouse?: Warehouse;
+  status?: StockTransferStatus;
+  /** @nullable */
+  notes?: string | null;
+  createdAt?: string;
+  /** @nullable */
+  dispatchedAt?: string | null;
+  /** @nullable */
+  completedAt?: string | null;
+  lines?: StockTransferLine[];
+}
+
+export interface TransferDestination {
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  warehouseId: number | string;
+  warehouseName: string;
+  /** @pattern ^-?(?:0|[1-9]\d*)$ */
+  branchId: number | string;
+  branchName: string;
+}
+
 export interface UpdateBatchExpiryRequest {
   expiryDate: string;
 }
@@ -530,6 +666,25 @@ productId?: number | string;
  * @pattern ^-?(?:0|[1-9]\d*)$
  */
 warehouseId?: number | string;
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
+};
+
+export type GetInventoryTransfersParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+branchId?: number | string;
+status?: StockTransferStatus;
+};
+
+export type GetInventoryStockInTransitParams = {
+/**
+ * @pattern ^-?(?:0|[1-9]\d*)$
+ */
+productId?: number | string;
 /**
  * @pattern ^-?(?:0|[1-9]\d*)$
  */

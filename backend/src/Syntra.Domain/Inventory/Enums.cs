@@ -10,5 +10,26 @@ public enum MovementType
 {
     Purchase,
     Sale,
-    ManualAdjustment
+    ManualAdjustment,
+    TransferOut,
+    TransferIn,
+    TransferReversal
+}
+
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum StockTransferStatus
+{
+    // Prepared only: no stock has moved and none is reserved.
+    Draft,
+
+    // Dispatched: the stock has left the source and has not arrived yet.
+    InTransit,
+
+    // Some, but not all, of the dispatched stock has been received.
+    PartiallyReceived,
+
+    // Fully received, or closed short with the remainder written off.
+    Received,
+
+    Cancelled
 }
